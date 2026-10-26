@@ -1,4 +1,9 @@
 import postgres from 'postgres';
+import fs from 'node:fs';
+
+if (fs.existsSync('.env.local')) {
+  process.loadEnvFile('.env.local');
+}
 
 const connectionString = process.env.DATABASE_URL;
 

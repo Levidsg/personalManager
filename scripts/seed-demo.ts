@@ -4,6 +4,12 @@ import { eq } from 'drizzle-orm';
 import * as schema from '../src/db/schema';
 import { hoje, somarDias } from '../src/lib/dates';
 
+import fs from 'node:fs';
+
+if (fs.existsSync('.env.local')) {
+  process.loadEnvFile('.env.local');
+}
+
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
