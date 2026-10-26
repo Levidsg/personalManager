@@ -1,0 +1,97 @@
+/*
+ * Tokens do design system (PROMPT.md §6.2). Única fonte de cor do app.
+ * Usa `light-dark()`: o tema é decidido por `color-scheme` no <html>
+ * (data-aparencia = sistema | claro | escuro), sem duplicar blocos.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Superfícies */
+  --bg: light-dark(#f5f5f7, #000000);
+  --surface: light-dark(#ffffff, #1c1c1e);
+  --surface-2: light-dark(#ffffff, #2c2c2e);
+  /* Corpo de sheet: cinza claro no claro, cinza elevado no escuro (padrão iOS) */
+  --sheet-bg: light-dark(#f5f5f7, #1c1c1e);
+  --sheet-row: light-dark(#ffffff, #2c2c2e);
+
+  /* Texto */
+  --text: light-dark(#1d1d1f, #f5f5f7);
+  --text-2: light-dark(#6e6e73, #a1a1a6);
+
+  /* Accent único (azul) */
+  --accent: light-dark(#0066cc, #2997ff);
+  --accent-fill: #0071e3;
+  --accent-fill-pressed: #0062c4;
+  --on-accent: #ffffff;
+
+  /* Semânticos: só para positivo/negativo/aviso, nunca decoração */
+  --positive: light-dark(#1f7a3a, #30d158);
+  --negative: light-dark(#c4161c, #ff6b63);
+  --warning: light-dark(#8f5200, #ffb340);
+
+  /* Linhas e preenchimentos neutros */
+  --separator: light-dark(rgba(60, 60, 67, 0.14), rgba(84, 84, 88, 0.55));
+  --separator-strong: light-dark(rgba(60, 60, 67, 0.29), rgba(84, 84, 88, 0.85));
+  --fill: light-dark(rgba(118, 118, 128, 0.12), rgba(118, 118, 128, 0.24));
+  --fill-2: light-dark(rgba(118, 118, 128, 0.2), rgba(118, 118, 128, 0.32));
+  --pressed: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.09));
+  --overlay: light-dark(rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.56));
+
+  /* Séries de gráfico (≥ 4,5:1 sobre as superfícies). Verde/vermelho só para entrada/saída. */
+  --series-1: light-dark(#0066cc, #4da3ff);
+  --series-2: light-dark(#b8530a, #ff9f43);
+  --series-3: light-dark(#7a3fb0, #bf8cff);
+  --series-4: light-dark(#007a8c, #40c8e0);
+  --series-5: light-dark(#6e6e73, #a1a1a6);
+
+  /* Sombras: só em elementos flutuantes */
+  --elev-float:
+    0 0 0 0.5px light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.06)),
+    0 12px 32px light-dark(rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0.6));
+  --elev-sheet: 0 -8px 40px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.6));
+
+  /* Movimento */
+  --dur-micro: 120ms;
+  --dur-base: 200ms;
+  --dur-sheet: 320ms;
+  --motion-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Layout */
+  --tabbar-h: 3.0625rem; /* 49 px */
+  --topbar-h: 2.75rem; /* 44 px */
+  --sidebar-w: 16.25rem;
+  --sidebar-w-collapsed: 4.25rem;
+  --content-max: 75rem;
+  --gutter: 1rem;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+:root[data-aparencia='claro'] {
+  color-scheme: light;
+}
+
+:root[data-aparencia='escuro'] {
+  color-scheme: dark;
+}
+
+/* Contraste aumentado: texto secundário mais forte e separadores visíveis */
+@media (prefers-contrast: more) {
+  :root {
+    --text-2: light-dark(#3a3a3c, #d1d1d6);
+    --separator: light-dark(rgba(60, 60, 67, 0.36), rgba(142, 142, 147, 0.7));
+    --separator-strong: light-dark(rgba(60, 60, 67, 0.6), rgba(174, 174, 178, 0.9));
+    --accent: light-dark(#004f9e, #5cb0ff);
+    --fill: light-dark(rgba(118, 118, 128, 0.2), rgba(118, 118, 128, 0.36));
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --gutter: 2rem;
+  }
+}
