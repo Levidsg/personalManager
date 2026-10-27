@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { usePrivacidade } from '@/hooks/use-privacidade';
+import { abrirPaletaComandos } from '@/components/ui/command-palette';
 
 export interface TopBarProps {
   nomeApp?: string;
@@ -24,10 +25,7 @@ export interface TopBarProps {
  * - Modo privacidade (botão olho).
  * - No desktop: botão de recolher sidebar e botão + de ações rápidas.
  */
-export function TopBar({
-  nomeApp = 'Controle',
-  onToggleSidebar,
-}: TopBarProps) {
+export function TopBar({ nomeApp = 'Controle', onToggleSidebar }: TopBarProps) {
   const pathname = usePathname();
   const { privacidadeAtiva, togglePrivacidade } = usePrivacidade();
 
@@ -51,34 +49,25 @@ export function TopBar({
   };
 
   return (
-    <header className="material sticky top-0 z-40 flex h-[var(--topbar-h)] w-full items-center justify-between border-b border-separator px-gutter pt-safe">
+    <header className="sticky top-0 z-40 flex h-[var(--topbar-h)] w-full items-center justify-between border-b border-separator pt-safe px-gutter material">
       <div className="flex items-center gap-2">
         {onToggleSidebar && (
           <div className="hidden lg:block">
-            <IconButton
-              rotulo="Alternar barra lateral"
-              tamanho="sm"
-              onClick={onToggleSidebar}
-            >
+            <IconButton rotulo="Alternar barra lateral" tamanho="sm" onClick={onToggleSidebar}>
               <Menu className="size-5" strokeWidth={1.75} />
             </IconButton>
           </div>
         )}
-        <h1 className="text-headline font-bold tracking-tight text-label">
-          {getTitulo()}
-        </h1>
+        <h1 className="text-headline font-bold tracking-tight text-label">{getTitulo()}</h1>
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2">
-        {/* Paleta de comandos (⌘K) */}
+        {/* Paleta de comandos (⌘K / Busca) */}
         <IconButton
-          rotulo="Buscar ou executar comandos (⌘K)"
+          id="btn-busca-global"
+          rotulo="Buscar ou executar comandos (Ctrl+K)"
           tamanho="sm"
-          onClick={() => {
-            window.dispatchEvent(
-              new KeyboardEvent('keydown', { key: 'k', metaKey: true }),
-            );
-          }}
+          onClick={abrirPaletaComandos}
         >
           <Search className="size-5 text-label-2" strokeWidth={1.75} />
         </IconButton>
