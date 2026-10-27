@@ -46,19 +46,19 @@ export function AppShell({ children, nomeApp = 'Controle' }: AppShellProps) {
   };
 
   return (
-    <div className="flex min-h-screen bg-canvas text-label">
+    <div className="flex min-h-screen bg-canvas text-label overflow-x-hidden max-w-full w-full">
       {/* Sidebar no desktop */}
       <Sidebar recolhida={sidebarRecolhida} nomeApp={nomeApp} />
 
       {/* Conteúdo principal */}
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex flex-1 flex-col min-w-0 overflow-x-hidden max-w-full w-full">
         <TopBar
           nomeApp={nomeApp}
           onToggleSidebar={toggleSidebar}
           sidebarRecolhida={sidebarRecolhida}
         />
 
-        <main className="flex-1 px-gutter py-4 lg:py-6 pb-[calc(var(--tabbar-h)+var(--safe-bottom)+2rem)] lg:pb-8 max-w-[var(--content-max)] w-full mx-auto">
+        <main className="flex-1 px-gutter py-4 lg:py-6 pb-[calc(var(--tabbar-h)+var(--safe-bottom)+2rem)] lg:pb-8 max-w-[var(--content-max)] w-full mx-auto min-w-0 overflow-x-hidden">
           {children}
         </main>
       </div>

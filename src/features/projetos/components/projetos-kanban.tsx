@@ -34,7 +34,7 @@ export function ProjetosKanban({
       </div>
 
       {/* Colunas do Kanban com Snap horizontal */}
-      <div className="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scroll-smooth w-full">
         {colunas.map((coluna) => (
           <div
             key={coluna.status}

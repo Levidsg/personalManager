@@ -51,10 +51,10 @@ export function SheetContent({
       <Drawer.Overlay className="fixed inset-0 z-50 bg-overlay backdrop-blur-xs transition-opacity duration-200" />
       <Drawer.Content
         className={cn(
-          'fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-sheet bg-sheet shadow-sheet outline-none',
+          'fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-sheet bg-sheet shadow-sheet outline-none overflow-hidden',
           'max-h-[92dvh] transition-transform duration-300 ease-sheet',
-          'lg:inset-x-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-full lg:max-w-lg lg:max-h-[85vh] lg:rounded-sheet',
-          altura === 'completa' ? 'h-[92dvh] lg:h-auto' : 'h-auto',
+          'lg:inset-x-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-full lg:max-w-lg lg:max-h-[85vh] lg:rounded-sheet lg:border lg:border-separator lg:after:hidden',
+          altura === 'completa' ? 'h-[92dvh] lg:h-[85vh]' : 'h-auto lg:h-fit',
           className,
         )}
         {...props}

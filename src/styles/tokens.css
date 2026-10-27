@@ -10,14 +10,15 @@
   /* Superfícies */
   --bg: light-dark(#f5f5f7, #000000);
   --surface: light-dark(#ffffff, #1c1c1e);
-  --surface-2: light-dark(#ffffff, #2c2c2e);
+  --surface-2: light-dark(#f5f5f7, #262628);
   /* Corpo de sheet: cinza claro no claro, cinza elevado no escuro (padrão iOS) */
   --sheet-bg: light-dark(#f5f5f7, #1c1c1e);
-  --sheet-row: light-dark(#ffffff, #2c2c2e);
+  --sheet-row: light-dark(#ffffff, #262628);
 
   /* Texto */
   --text: light-dark(#1d1d1f, #f5f5f7);
   --text-2: light-dark(#6e6e73, #a1a1a6);
+  --text-3: light-dark(#86868b, #7c7c82);
 
   /* Accent único (azul) */
   --accent: light-dark(#0066cc, #2997ff);
@@ -31,8 +32,8 @@
   --warning: light-dark(#8f5200, #ffb340);
 
   /* Linhas e preenchimentos neutros */
-  --separator: light-dark(rgba(60, 60, 67, 0.14), rgba(84, 84, 88, 0.55));
-  --separator-strong: light-dark(rgba(60, 60, 67, 0.29), rgba(84, 84, 88, 0.85));
+  --separator: light-dark(rgba(60, 60, 67, 0.12), rgba(255, 255, 255, 0.09));
+  --separator-strong: light-dark(rgba(60, 60, 67, 0.24), rgba(255, 255, 255, 0.18));
   --fill: light-dark(rgba(118, 118, 128, 0.12), rgba(118, 118, 128, 0.24));
   --fill-2: light-dark(rgba(118, 118, 128, 0.2), rgba(118, 118, 128, 0.32));
   --pressed: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.09));
