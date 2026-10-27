@@ -53,6 +53,9 @@ export interface FormatoMoeda {
  * O sinal negativo usa o caractere de menos (U+2212), tipograficamente correto.
  */
 export function formatarMoeda(centavos: Centavos, opcoes: FormatoMoeda = {}): string {
+  if (centavos === undefined || centavos === null || Number.isNaN(centavos)) {
+    return 'R$ 0,00';
+  }
   assertCentavos(centavos);
   const absoluto = Math.abs(centavos) / 100;
   const base = normalizarEspacos(
@@ -71,6 +74,9 @@ function formatarCompacto(reais: number): string {
 
 /** `1.234,56` (sem símbolo) — usado no campo monetário. */
 export function formatarDecimal(centavos: Centavos): string {
+  if (centavos === undefined || centavos === null || Number.isNaN(centavos)) {
+    return '0,00';
+  }
   assertCentavos(centavos);
   return normalizarEspacos(decimal.format(centavos / 100));
 }
