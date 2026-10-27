@@ -14,6 +14,14 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Controle',
   description: 'Controle financeiro pessoal e estúdio freelancer.',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Controle',
+  },
+  icons: {
+    apple: '/icons/icon-192.svg',
+  },
   robots: {
     index: false,
     follow: false,
