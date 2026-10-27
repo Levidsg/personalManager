@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['postgres'],
   reactStrictMode: true,
   poweredByHeader: false,
   async headers() {

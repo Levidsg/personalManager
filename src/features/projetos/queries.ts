@@ -179,8 +179,18 @@ export async function getProjetos() {
     colunas,
     pipelinePonderadoCentavos,
     totalEmAbertoCentavos,
-    clientes: listaClientes.filter((c) => !c.arquivado),
-    servicos: listaServicos.filter((s) => s.ativo),
+    clientes: listaClientes
+      .filter((c) => !c.arquivado)
+      .map((c) => ({ id: c.id, nome: c.nome })),
+    servicos: listaServicos
+      .filter((s) => s.ativo)
+      .map((s) => ({
+        id: s.id,
+        nome: s.nome,
+        precoBaseCentavos: s.precoBaseCentavos,
+        prazoMedioDias: s.prazoMedioDias,
+        revisoesIncluidas: s.revisoesIncluidas,
+      })),
   };
 }
 

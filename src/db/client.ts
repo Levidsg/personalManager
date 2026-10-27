@@ -9,9 +9,22 @@ const connectionString = process.env.DATABASE_URL;
  * Cliente Postgres via postgres.js configurado para o pooler (Supavisor) do Supabase.
  * `prepare: false` é obrigatório no modo transação (porta 6543) (§2, §5).
  */
-const client = connectionString
-  ? postgres(connectionString, { prepare: false })
-  : (null as unknown as ReturnType<typeof postgres>);
+const globalForDb = globalThis as unknown as {
+  conn: ReturnType<typeof postgres> | undefined;
+};
+
+const client =
+  globalForDb.conn ??
+  (connectionString
+    ? postgres(connectionString, {
+        prepare: false,
+        max: 5,
+        idle_timeout: 10,
+        connect_timeout: 15,
+      })
+    : (null as unknown as ReturnType<typeof postgres>));
+
+globalForDb.conn = client;
 
 export const db = client
   ? drizzle(client, { schema })

@@ -1,24 +1,20 @@
 'server-only';
 
-import { asc, desc, eq } from 'drizzle-orm';
+import { asc, desc, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
   ajustesSalario,
-  assinaturaPagamentos,
   assinaturas,
   categorias,
   clientes,
   configuracoes,
   contribuicaoPagamentos,
-  contribuicoes,
-  dividaPagamentos,
   dividas,
   ID_CONFIGURACOES_UNICA,
   investimentos,
   lancamentos,
   projetos,
   recebimentos,
-  servicos,
 } from '@/db/schema';
 import {
   diferencaEmDias,
@@ -79,40 +75,39 @@ export async function getDashboardData(
   const dataHoje = hoje();
   const competenciaAnterior = somarMeses(competencia, -1);
 
+  // Lote 1: Configurações, Ajustes de Salário e Categorias
+  const [config, ajustesSal, todasCategorias] = await Promise.all([
+    db.query.configuracoes.findFirst({ where: eq(configuracoes.id, ID_CONFIGURACOES_UNICA) }),
+    db
+      .select()
+      .from(ajustesSalario)
+      .where(inArray(ajustesSalario.competencia, [competencia, competenciaAnterior])),
+    db.select().from(categorias),
+  ]);
+
+  const ajusteSalarioAtual = ajustesSal.find((a) => a.competencia === competencia);
+  const ajusteSalarioAnt = ajustesSal.find((a) => a.competencia === competenciaAnterior);
+
+  // Lote 2: Finanças Pessoais
   const [
-    config,
-    ajusteSalarioAtual,
-    ajusteSalarioAnt,
     todosLancamentos,
     todasAssinaturas,
-    _todosPagAssinaturas,
-    _todasContribuicoes,
     todosPagContribuicoes,
     todasDividas,
-    _todosPagDividas,
     todosInvestimentos,
-    todosProjetos,
-    todosClientes,
-    todosRecebimentos,
-    todosServicos,
-    todasCategorias,
   ] = await Promise.all([
-    db.query.configuracoes.findFirst({ where: eq(configuracoes.id, ID_CONFIGURACOES_UNICA) }),
-    db.query.ajustesSalario.findFirst({ where: eq(ajustesSalario.competencia, competencia) }),
-    db.query.ajustesSalario.findFirst({ where: eq(ajustesSalario.competencia, competenciaAnterior) }),
     db.select().from(lancamentos).orderBy(desc(lancamentos.data)),
     db.select().from(assinaturas),
-    db.select().from(assinaturaPagamentos),
-    db.select().from(contribuicoes),
     db.select().from(contribuicaoPagamentos),
     db.select().from(dividas),
-    db.select().from(dividaPagamentos),
     db.select().from(investimentos),
+  ]);
+
+  // Lote 3: Estúdio Freelancer
+  const [todosProjetos, todosClientes, todosRecebimentos] = await Promise.all([
     db.select().from(projetos).orderBy(asc(projetos.prazoEntrega)),
     db.select().from(clientes),
     db.select().from(recebimentos),
-    db.select().from(servicos),
-    db.select().from(categorias),
   ]);
 
   const salarioBaseMes =
@@ -570,8 +565,5 @@ export async function getDashboardData(
     },
     despesasPorCategoria,
     clienteConcentracaoAlerta,
-    clientes: todosClientes,
-    projetos: todosProjetos,
-    servicos: todosServicos,
   };
 }

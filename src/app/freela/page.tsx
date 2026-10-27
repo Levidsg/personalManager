@@ -1,38 +1,112 @@
 import Link from 'next/link';
+import { ChevronRight, DollarSign, FolderKanban, Layers, Users } from 'lucide-react';
+import { isNull } from 'drizzle-orm';
+import { db } from '@/db/client';
 import {
-  ChevronRight,
-  DollarSign,
-  FolderKanban,
-  Layers,
-  Users,
-} from 'lucide-react';
-import { getTimerAtivo } from '@/features/tempo/queries';
+  clientes,
+  metas,
+  projetos,
+  recebimentos,
+  registrosTempo,
+  servicos,
+} from '@/db/schema';
+import { diasNoMes, diferencaEmDias, hoje, mesDe } from '@/lib/dates';
+import { calcularPipelinePonderado } from '@/lib/finance';
+import { formatarMoeda, somar, type Centavos } from '@/lib/money';
 import { TimerGlobal } from '@/features/tempo/components/timer-global';
 import { NovoTempoManualSheet } from '@/features/tempo/components/novo-tempo-manual-sheet';
-import { getMetaDoMes } from '@/features/metas/queries';
 import { MetaProgressoCard } from '@/features/metas/components/meta-progresso-card';
-import { getProjetos } from '@/features/projetos/queries';
-import { getClientes } from '@/features/clientes/queries';
-import { getRecebimentos } from '@/features/recebimentos/queries';
-import { getServicos } from '@/features/servicos/queries';
-import { formatarMoeda } from '@/lib/money';
 
 export const dynamic = 'force-dynamic';
 
 export default async function FreelaHubPage() {
-  const [timerAtivo, dadosProjetos, dadosClientes, dadosRecebimentos, listaServicos, dadosMeta] =
-    await Promise.all([
-      getTimerAtivo(),
-      getProjetos(),
-      getClientes(),
-      getRecebimentos(),
-      getServicos(),
-      getMetaDoMes(),
-    ]);
+  const dataHoje = hoje();
+  const competencia = mesDe(dataHoje);
 
-  const projetosAtivos = dadosProjetos.projetos.filter(
-    (p) => !['concluido', 'cancelado'].includes(p.status),
+  // Consulta em 2 lotes leves para não saturar o pooler Supabase
+  const [todosProjetos, todosRecebimentos, todosClientes] = await Promise.all([
+    db.select().from(projetos),
+    db.select().from(recebimentos),
+    db.select().from(clientes),
+  ]);
+
+  const [todosServicos, todasMetas, timerRegistro] = await Promise.all([
+    db.select().from(servicos),
+    db.select().from(metas),
+    db.query.registrosTempo.findFirst({
+      where: isNull(registrosTempo.fim),
+    }),
+  ]);
+
+  // Timer Ativo
+  const timerAtivo = timerRegistro
+    ? {
+        id: timerRegistro.id,
+        projetoId: timerRegistro.projetoId,
+        projetoTitulo:
+          todosProjetos.find((p) => p.id === timerRegistro.projetoId)?.titulo ?? 'Projeto',
+        inicio:
+          timerRegistro.inicio instanceof Date
+            ? timerRegistro.inicio.toISOString()
+            : String(timerRegistro.inicio),
+      }
+    : null;
+
+  // Projetos
+  const projetosAtivos = todosProjetos
+    .filter((p) => !['concluido', 'cancelado'].includes(p.status))
+    .map((p) => ({ id: p.id, titulo: p.titulo }));
+
+  const pipelinePonderadoCentavos = calcularPipelinePonderado(
+    todosProjetos.map((p) => ({
+      id: p.id,
+      status: p.status,
+      valorTotalCentavos: p.valorTotalCentavos,
+    })),
   );
+
+  // Recebimentos
+  const pendentes = todosRecebimentos.filter((r) => r.recebidoEm === null);
+  const atrasados = pendentes.filter((r) => diferencaEmDias(dataHoje, r.vencimento) < 0);
+  const _aReceber = pendentes.filter((r) => diferencaEmDias(dataHoje, r.vencimento) >= 0);
+  const totalAReceberCentavos = somar(pendentes.map((r) => r.valorCentavos));
+
+  // Meta de Faturamento do Mês
+  const metaEspecifica = todasMetas.find(
+    (m) => m.tipo === 'faturamento_mensal' && m.competencia === competencia,
+  );
+  const metaPadrao = todasMetas.find(
+    (m) => m.tipo === 'faturamento_mensal' && m.competencia === null,
+  );
+  const metaCentavos: Centavos =
+    metaEspecifica?.valorCentavos ?? metaPadrao?.valorCentavos ?? 500000;
+
+  const recebidosNoMes = todosRecebimentos.filter(
+    (r) => r.recebidoEm && mesDe(r.recebidoEm) === competencia,
+  );
+  const faturadoMesCentavos = somar(recebidosNoMes.map((r) => r.valorCentavos));
+
+  const percentualPb =
+    metaCentavos > 0 ? Math.round((faturadoMesCentavos * 10000) / metaCentavos) : 0;
+  const percentualProgresso = Math.min(100, Math.round(percentualPb / 100));
+
+  const totalDiasMes = diasNoMes(competencia);
+  const diaAtual = Number(dataHoje.slice(8, 10));
+  const diasRestantes = Math.max(1, totalDiasMes - diaAtual);
+  const faltanteCentavos = Math.max(0, metaCentavos - faturadoMesCentavos);
+  const ritmoNecessarioDiarioCentavos = Math.round(faltanteCentavos / diasRestantes);
+
+  const dadosMeta = {
+    competencia,
+    metaCentavos,
+    faturadoMesCentavos,
+    percentualProgresso,
+    percentualFormatado: `${(percentualPb / 100).toFixed(1).replace('.', ',')}%`,
+    faltanteCentavos,
+    diasRestantes,
+    ritmoNecessarioDiarioCentavos,
+    atingida: faturadoMesCentavos >= metaCentavos,
+  };
 
   return (
     <div className="space-y-6">
@@ -76,13 +150,13 @@ export default async function FreelaHubPage() {
                 </span>
                 <span className="text-caption2 text-tertiary">
                   {projetosAtivos.length} ativo(s) • Pipeline:{' '}
-                  {formatarMoeda(dadosProjetos.pipelinePonderadoCentavos)}
+                  {formatarMoeda(pipelinePonderadoCentavos)}
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-secondary">
               <span className="text-caption1 font-semibold tabular-nums text-label">
-                {dadosProjetos.projetos.length}
+                {todosProjetos.length}
               </span>
               <ChevronRight className="size-4 text-tertiary" />
             </div>
@@ -108,7 +182,7 @@ export default async function FreelaHubPage() {
             </div>
             <div className="flex items-center gap-1.5 text-secondary">
               <span className="text-caption1 font-semibold tabular-nums text-label">
-                {dadosClientes.clientes.length}
+                {todosClientes.length}
               </span>
               <ChevronRight className="size-4 text-tertiary" />
             </div>
@@ -128,18 +202,18 @@ export default async function FreelaHubPage() {
                   Recebimentos
                 </span>
                 <span className="text-caption2 text-tertiary">
-                  {dadosRecebimentos.atrasados.length > 0 ? (
+                  {atrasados.length > 0 ? (
                     <strong className="text-red-500 font-semibold">
-                      {dadosRecebimentos.atrasados.length} em atraso •{' '}
+                      {atrasados.length} em atraso •{' '}
                     </strong>
                   ) : null}
-                  A receber: {formatarMoeda(dadosRecebimentos.totalAReceberCentavos)}
+                  A receber: {formatarMoeda(totalAReceberCentavos)}
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-secondary">
               <span className="text-caption1 font-semibold tabular-nums text-label">
-                {dadosRecebimentos.aReceber.length + dadosRecebimentos.atrasados.length}
+                {pendentes.length}
               </span>
               <ChevronRight className="size-4 text-tertiary" />
             </div>
@@ -165,7 +239,7 @@ export default async function FreelaHubPage() {
             </div>
             <div className="flex items-center gap-1.5 text-secondary">
               <span className="text-caption1 font-semibold tabular-nums text-label">
-                {listaServicos.length}
+                {todosServicos.length}
               </span>
               <ChevronRight className="size-4 text-tertiary" />
             </div>

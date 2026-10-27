@@ -15,7 +15,7 @@ interface TimerAtivo {
   id: string;
   projetoId: string;
   projetoTitulo: string;
-  inicio: Date;
+  inicio: string | Date;
 }
 
 export function TimerGlobal({

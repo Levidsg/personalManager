@@ -16,8 +16,13 @@ export async function getTimerAtivo() {
   });
 
   return {
-    ...registro,
+    id: registro.id,
+    projetoId: registro.projetoId,
     projetoTitulo: projeto?.titulo ?? 'Projeto',
+    inicio:
+      registro.inicio instanceof Date
+        ? registro.inicio.toISOString()
+        : String(registro.inicio),
   };
 }
 
