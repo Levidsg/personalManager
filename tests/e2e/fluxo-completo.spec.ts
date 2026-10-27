@@ -48,6 +48,8 @@ test.describe('Controle - Fluxo Completo Ponta a Ponta (§10.4)', () => {
     await page.goto('/projetos');
     await expect(page.getByRole('heading', { name: 'Projetos & Pipeline' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Novo Projeto' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Lista' })).toHaveAttribute('aria-selected', 'true');
+    await page.getByRole('tab', { name: 'Quadro' }).click();
     await expect(page.getByText('Lead').first()).toBeVisible();
     await expect(page.getByText('Em Andamento').first()).toBeVisible();
   });
