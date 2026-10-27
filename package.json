@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.105.0",
+    "cmdk": "^1.1.1",
     "date-fns": "4.4.0",
     "drizzle-orm": "0.45.4",
     "lucide-react": "1.61.0",

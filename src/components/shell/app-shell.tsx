@@ -6,6 +6,7 @@ import { TopBar } from '@/components/shell/top-bar';
 import { TabBar } from '@/components/shell/tab-bar';
 import { Fab } from '@/components/shell/fab';
 import { Toaster } from '@/components/ui/toast';
+import { CommandPalette } from '@/components/ui/command-palette';
 
 const CHAVE_SIDEBAR = 'controle_sidebar_recolhida';
 
@@ -68,6 +69,9 @@ export function AppShell({ children, nomeApp = 'Controle' }: AppShellProps) {
 
       {/* Notificações toast com Desfazer */}
       <Toaster />
+
+      {/* Paleta de comandos (⌘K) */}
+      <CommandPalette />
     </div>
   );
 }

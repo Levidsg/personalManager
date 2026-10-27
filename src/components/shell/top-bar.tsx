@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, EyeOff, Plus, Menu } from 'lucide-react';
+import { Eye, EyeOff, Menu, Plus, Search } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { IconButton } from '@/components/ui/icon-button';
@@ -70,6 +70,19 @@ export function TopBar({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Paleta de comandos (⌘K) */}
+        <IconButton
+          rotulo="Buscar ou executar comandos (⌘K)"
+          tamanho="sm"
+          onClick={() => {
+            window.dispatchEvent(
+              new KeyboardEvent('keydown', { key: 'k', metaKey: true }),
+            );
+          }}
+        >
+          <Search className="size-5 text-label-2" strokeWidth={1.75} />
+        </IconButton>
+
         {/* Botão de privacidade */}
         <IconButton
           rotulo={privacidadeAtiva ? 'Desativar modo privacidade' : 'Ativar modo privacidade'}
