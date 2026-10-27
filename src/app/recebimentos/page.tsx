@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { FileText } from 'lucide-react';
 import { getRecebimentos } from '@/features/recebimentos/queries';
 import { RecebimentosTabs } from '@/features/recebimentos/components/recebimentos-tabs';
 import { NovoRecebimentoSheet } from '@/features/recebimentos/components/novo-recebimento-sheet';
@@ -20,7 +22,17 @@ export default async function RecebimentosPage() {
           </p>
         </div>
 
-        <NovoRecebimentoSheet projetos={dados.projetos} />
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/relatorios/clientes-devedores"
+            className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-field bg-card border border-border text-subhead font-medium text-label hover:bg-card-secondary transition-colors shadow-xs"
+            title="Exportar relatório de clientes devedores em PDF"
+          >
+            <FileText className="size-4 text-accent" />
+            <span>Exportar PDF</span>
+          </Link>
+          <NovoRecebimentoSheet projetos={dados.projetos} />
+        </div>
       </div>
 
       {/* Abas e Listagem com Ações */}
@@ -31,6 +43,8 @@ export default async function RecebimentosPage() {
         totalAReceberCentavos={dados.totalAReceberCentavos}
         totalAtrasadoCentavos={dados.totalAtrasadoCentavos}
         totalRecebidoCentavos={dados.totalRecebidoCentavos}
+        clientes={dados.clientes}
+        projetos={dados.projetos}
       />
     </div>
   );

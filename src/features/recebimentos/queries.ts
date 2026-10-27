@@ -81,5 +81,115 @@ export async function getRecebimentos() {
     totalAtrasadoCentavos: somar(atrasados.map((r) => r.valorCentavos)),
     totalRecebidoCentavos: somar(recebidos.map((r) => r.valorCentavos)),
     projetos: listaProjetos.filter((p) => !['concluido', 'cancelado'].includes(p.status)),
+    clientes: listaClientes,
+  };
+}
+
+export interface ParcelaDevedora {
+  id: string;
+  projetoTitulo: string;
+  descricao: string;
+  vencimento: string;
+  valorCentavos: Centavos;
+  estaAtrasado: boolean;
+  diasAtraso: number;
+}
+
+export interface DevedorClienteItem {
+  clienteId: string;
+  clienteNome: string;
+  empresa: string | null;
+  email: string | null;
+  telefone: string | null;
+  totalPendenteCentavos: Centavos;
+  totalAtrasadoCentavos: Centavos;
+  parcelas: ParcelaDevedora[];
+}
+
+export interface RelatorioDevedoresData {
+  emitidoEm: string;
+  totalGeralPendenteCentavos: Centavos;
+  totalGeralAtrasadoCentavos: Centavos;
+  qtdClientesDevedores: number;
+  qtdParcelasPendentes: number;
+  clientes: DevedorClienteItem[];
+}
+
+export async function getRelatorioDevedores(): Promise<RelatorioDevedoresData> {
+  const [listaRecebimentos, listaProjetos, listaClientes] = await Promise.all([
+    db.select().from(recebimentos).orderBy(asc(recebimentos.vencimento)),
+    db.select().from(projetos),
+    db.select().from(clientes).orderBy(asc(clientes.nome)),
+  ]);
+
+  const clienteMap = new Map(listaClientes.map((c) => [c.id, c]));
+  const projetoMap = new Map(
+    listaProjetos.map((p) => [p.id, { titulo: p.titulo, clienteId: p.clienteId }]),
+  );
+
+  const dataHoje = hoje();
+
+  // Filtrar parcelas pendentes (não liquidadas)
+  const pendentes = listaRecebimentos.filter((r) => r.recebidoEm === null);
+
+  // Agrupar por cliente
+  const agrupadoPorCliente = new Map<string, DevedorClienteItem>();
+
+  for (const r of pendentes) {
+    const proj = projetoMap.get(r.projetoId);
+    if (!proj) continue;
+    const cliente = clienteMap.get(proj.clienteId);
+    if (!cliente) continue;
+
+    const diferenca = diferencaEmDias(dataHoje, r.vencimento);
+    const estaAtrasado = diferenca < 0;
+    const diasAtraso = estaAtrasado ? Math.abs(diferenca) : 0;
+
+    let item = agrupadoPorCliente.get(cliente.id);
+    if (!item) {
+      item = {
+        clienteId: cliente.id,
+        clienteNome: cliente.nome,
+        empresa: cliente.empresa,
+        email: cliente.email,
+        telefone: cliente.telefone,
+        totalPendenteCentavos: 0,
+        totalAtrasadoCentavos: 0,
+        parcelas: [],
+      };
+      agrupadoPorCliente.set(cliente.id, item);
+    }
+
+    item.totalPendenteCentavos = (item.totalPendenteCentavos + r.valorCentavos) as Centavos;
+    if (estaAtrasado) {
+      item.totalAtrasadoCentavos = (item.totalAtrasadoCentavos + r.valorCentavos) as Centavos;
+    }
+
+    item.parcelas.push({
+      id: r.id,
+      projetoTitulo: proj.titulo,
+      descricao: r.descricao,
+      vencimento: r.vencimento,
+      valorCentavos: r.valorCentavos,
+      estaAtrasado,
+      diasAtraso,
+    });
+  }
+
+  // Ordenar clientes pelo maior valor pendente
+  const clientesDevedores = Array.from(agrupadoPorCliente.values()).sort(
+    (a, b) => b.totalPendenteCentavos - a.totalPendenteCentavos,
+  );
+
+  const totalGeralPendenteCentavos = somar(clientesDevedores.map((c) => c.totalPendenteCentavos));
+  const totalGeralAtrasadoCentavos = somar(clientesDevedores.map((c) => c.totalAtrasadoCentavos));
+
+  return {
+    emitidoEm: dataHoje,
+    totalGeralPendenteCentavos,
+    totalGeralAtrasadoCentavos,
+    qtdClientesDevedores: clientesDevedores.length,
+    qtdParcelasPendentes: pendentes.length,
+    clientes: clientesDevedores,
   };
 }

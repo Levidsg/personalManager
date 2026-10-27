@@ -15,7 +15,7 @@ export function NovaContribuicaoSheet() {
   const [nome, setNome] = useState('');
   const [icone, setIcone] = useState('heart');
   const [modelo, setModelo] = useState<'percentual' | 'fixo'>('percentual');
-  const [percentual, setPercentual] = useState<number>(10);
+  const [percentual, setPercentual] = useState<string>('10');
   const [valorFixoCentavos, setValorFixoCentavos] = useState<Centavos>(0);
   const [salvando, setSalvando] = useState(false);
 
@@ -26,20 +26,30 @@ export function NovaContribuicaoSheet() {
       return;
     }
 
+    let percentualPb: number | null = null;
+    if (modelo === 'percentual') {
+      const percNum = parseFloat(percentual.replace(',', '.'));
+      if (isNaN(percNum) || percNum <= 0 || percNum > 100) {
+        toast.erro('Informe uma alíquota válida entre 0,1% e 100%.');
+        return;
+      }
+      percentualPb = Math.round(percNum * 100);
+    }
+
     try {
       setSalvando(true);
       await criarContribuicao({
         nome: nome.trim(),
         icone,
         modelo,
-        percentualPb: modelo === 'percentual' ? Math.round(percentual * 100) : null,
+        percentualPb,
         valorFixoCentavos: modelo === 'fixo' ? valorFixoCentavos : null,
         recorrente: true,
       });
       toast.sucesso('Contribuição configurada com sucesso!');
       setAberto(false);
       setNome('');
-      setPercentual(10);
+      setPercentual('10');
       setValorFixoCentavos(0);
     } catch {
       toast.erro('Não foi possível salvar a contribuição.');
@@ -60,7 +70,7 @@ export function NovaContribuicaoSheet() {
         titulo="Nova Contribuição / Dízimo"
         descricao="Configure uma alíquota ou valor fixo para cálculo mensal automático"
       >
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 py-2">
           <div>
             <label className="text-caption1 font-medium text-secondary block mb-1.5">
               Nome da Contribuição
@@ -113,11 +123,12 @@ export function NovaContribuicaoSheet() {
               <div className="relative">
                 <input
                   type="number"
-                  step="0.5"
-                  min="0.1"
+                  step="any"
+                  min="0.01"
                   max="100"
                   value={percentual}
-                  onChange={(e) => setPercentual(Number(e.target.value))}
+                  onChange={(e) => setPercentual(e.target.value)}
+                  placeholder="Ex: 10"
                   className="w-full rounded-xl bg-card border border-border px-3 py-2 text-subhead text-label focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <span className="absolute right-3 top-2.5 text-secondary text-footnote font-medium">

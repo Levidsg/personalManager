@@ -64,7 +64,7 @@
   --topbar-h: 2.75rem; /* 44 px */
   --sidebar-w: 16.25rem;
   --sidebar-w-collapsed: 4.25rem;
-  --content-max: 75rem;
+  --content-max: 100rem;
   --gutter: 1rem;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);

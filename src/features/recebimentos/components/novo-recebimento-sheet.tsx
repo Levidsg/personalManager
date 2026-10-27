@@ -13,17 +13,35 @@ import { criarRecebimentoAvulso } from '../actions';
 interface ProjetoOpcao {
   id: string;
   titulo: string;
+  clienteId?: string;
 }
 
 export function NovoRecebimentoSheet({
   projetos,
+  rotuloBotao = 'Novo Recebimento',
+  projetoIdInicial,
+  clienteIdInicial,
+  variante = 'primario',
 }: {
   projetos: ProjetoOpcao[];
+  rotuloBotao?: string;
+  projetoIdInicial?: string;
+  clienteIdInicial?: string;
+  variante?: 'primario' | 'secundario' | 'simples';
 }) {
   const [aberto, setAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
-  const [projetoId, setProjetoId] = useState(projetos[0]?.id ?? '');
+  const getProjetoInicial = () => {
+    if (projetoIdInicial) return projetoIdInicial;
+    if (clienteIdInicial) {
+      const projCliente = projetos.find((p) => p.clienteId === clienteIdInicial);
+      if (projCliente) return projCliente.id;
+    }
+    return projetos[0]?.id ?? '';
+  };
+
+  const [projetoId, setProjetoId] = useState(getProjetoInicial);
   const [descricao, setDescricao] = useState('');
   const [valorCentavos, setValorCentavos] = useState<Centavos>(50000); // R$ 500,00
   const [vencimento, setVencimento] = useState(hoje());
@@ -66,9 +84,9 @@ export function NovoRecebimentoSheet({
   return (
     <Sheet open={aberto} onOpenChange={setAberto}>
       <SheetTrigger asChild>
-        <Button variante="primario" className="gap-1.5">
+        <Button variante={variante} className="gap-1.5 shadow-xs">
           <Plus className="size-4" />
-          <span>Nova Parcela</span>
+          <span>{rotuloBotao}</span>
         </Button>
       </SheetTrigger>
 

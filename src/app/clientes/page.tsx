@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { FileText } from 'lucide-react';
 import { getClientes } from '@/features/clientes/queries';
 import { ClientesLista } from '@/features/clientes/components/clientes-lista';
 import { NovoClienteSheet } from '@/features/clientes/components/novo-cliente-sheet';
@@ -18,7 +20,17 @@ export default async function ClientesPage() {
           </p>
         </div>
 
-        <NovoClienteSheet />
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/relatorios/clientes-devedores"
+            className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-field bg-card border border-border text-subhead font-medium text-label hover:bg-card-secondary transition-colors shadow-xs"
+            title="Exportar relatório de clientes devedores em PDF"
+          >
+            <FileText className="size-4 text-accent" />
+            <span>Exportar PDF</span>
+          </Link>
+          <NovoClienteSheet />
+        </div>
       </div>
 
       {/* Lista com Busca, Filtros e Indicador de Concentração */}

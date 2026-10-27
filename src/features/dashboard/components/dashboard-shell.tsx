@@ -115,26 +115,29 @@ export function DashboardShell({ dados }: { dados: DashboardData }) {
         dadosFreela={dados.indicadores.freela}
       />
 
-      {/* Elemento de Assinatura: Fluxo do Mês (§9.2) */}
-      <FluxoDoMesChart
-        dias={dados.fluxoDoMes}
-        diaSelecionado={diaSelecionado}
-        onSelecionarDia={setDiaSelecionado}
-      />
+      {/* Grid Principal: Gráfico + Previsão à esquerda e Agenda ocupando a lateral à direita */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Área Principal (Esquerda - 7/8 colunas) */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+          {/* Elemento de Assinatura: Fluxo do Mês (§9.2) */}
+          <FluxoDoMesChart
+            dias={dados.fluxoDoMes}
+            diaSelecionado={diaSelecionado}
+            onSelecionarDia={setDiaSelecionado}
+          />
 
-      {/* Grid: Agenda Próximos 14 Dias & Previsão / Categorias */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Próximos 14 Dias */}
-        <ProximosDiasAgenda itens={dados.agenda} />
-
-        {/* Lado Direito: Previsão dos Próximos 3 Meses */}
-        <div className="space-y-6">
+          {/* Previsão dos Próximos 3 Meses */}
           <PrevisaoBloco previsao={dados.previsao} />
 
           {/* Despesas por Categoria (visível na visão Tudo) */}
           {visao === 'tudo' && (
             <DespesasCategoriaBloco itens={dados.despesasPorCategoria} />
           )}
+        </div>
+
+        {/* Área Lateral (Direita - 5/4 colunas): Agenda Próximos 14 Dias */}
+        <div className="lg:col-span-5 xl:col-span-4 space-y-6">
+          <ProximosDiasAgenda itens={dados.agenda} />
         </div>
       </div>
     </div>

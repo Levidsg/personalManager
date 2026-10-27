@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode, useSyncExternalStore } from 'react';
+import { cn } from '@/lib/cn';
 import { Sidebar } from '@/components/shell/sidebar';
 import { TopBar } from '@/components/shell/top-bar';
 import { TabBar } from '@/components/shell/tab-bar';
@@ -47,8 +48,15 @@ export function AppShell({ children, nomeApp = 'Controle' }: AppShellProps) {
 
   return (
     <div className="flex min-h-screen bg-canvas text-label overflow-x-hidden max-w-full w-full">
-      {/* Sidebar no desktop */}
+      {/* Sidebar no desktop (fixa) */}
       <Sidebar recolhida={sidebarRecolhida} nomeApp={nomeApp} />
+      <div
+        className={cn(
+          'hidden lg:block shrink-0 transition-all duration-200',
+          sidebarRecolhida ? 'w-[var(--sidebar-w-collapsed)]' : 'w-[var(--sidebar-w)]',
+        )}
+        aria-hidden="true"
+      />
 
       {/* Conteúdo principal */}
       <div className="flex flex-1 flex-col min-w-0 overflow-x-hidden max-w-full w-full">

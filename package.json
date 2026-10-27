@@ -21,6 +21,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx scripts/seed.ts",
     "db:seed:demo": "tsx scripts/seed-demo.ts",
+    "db:clear": "tsx scripts/limpar-dados.ts",
     "db:check": "tsx scripts/check-db.ts",
     "check:secrets": "tsx scripts/check-secrets.ts"
   },

@@ -414,3 +414,56 @@ html[data-privacidade='on'] [data-sensivel]:not([data-mascarado])::after {
 @utility animate-fade {
   animation: fade-in var(--dur-base) var(--motion-standard);
 }
+
+/*
+ * Otimização para Impressão e Exportação de PDF:
+ * Oculta barras de navegação, sidebars, ações flutuantes e renderiza
+ * o relatório com fundo limpo e alta definição tipográfica.
+ */
+@media print {
+  body,
+  html {
+    background: #ffffff !important;
+    color: #1d1d1f !important;
+    overflow: visible !important;
+  }
+
+  aside,
+  header,
+  nav,
+  .no-print,
+  [role='navigation'] {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .relatorio-documento {
+    background: #ffffff !important;
+    color: #1d1d1f !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .relatorio-documento * {
+    color: #1d1d1f !important;
+    border-color: #e5e5ea !important;
+  }
+
+  .relatorio-documento .bg-card,
+  .relatorio-documento .bg-card-secondary {
+    background-color: #f5f5f7 !important;
+  }
+
+  .break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+

@@ -86,7 +86,7 @@ export function Sidebar({ recolhida = false, nomeApp = 'Controle' }: SidebarProp
   return (
     <aside
       className={cn(
-        'hidden lg:flex flex-col border-r border-separator bg-surface transition-all duration-200 select-none shrink-0 h-screen sticky top-0',
+        'hidden lg:flex flex-col border-r border-separator bg-surface transition-all duration-200 select-none shrink-0 h-screen fixed top-0 left-0 bottom-0 z-30',
         recolhida ? 'w-[var(--sidebar-w-collapsed)]' : 'w-[var(--sidebar-w)]',
       )}
     >
