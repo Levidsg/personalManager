@@ -1,0 +1,85 @@
+'server-only';
+
+import { asc } from 'drizzle-orm';
+import { db } from '@/db/client';
+import { clientes, projetos, recebimentos } from '@/db/schema';
+import { diferencaEmDias, hoje } from '@/lib/dates';
+import { somar, type Centavos } from '@/lib/money';
+import type { MetodoPagamentoRecebimento } from './schema';
+
+export interface RecebimentoComDetalhes {
+  id: string;
+  projetoId: string;
+  projetoTitulo: string;
+  clienteId: string;
+  clienteNome: string;
+  descricao: string;
+  valorCentavos: Centavos;
+  vencimento: string;
+  recebidoEm: string | null;
+  metodoPagamento: MetodoPagamentoRecebimento | null;
+  lancamentoId: string | null;
+  estaAtrasado: boolean;
+  diasAtraso: number;
+}
+
+export async function getRecebimentos() {
+  const [listaRecebimentos, listaProjetos, listaClientes] = await Promise.all([
+    db.select().from(recebimentos).orderBy(asc(recebimentos.vencimento)),
+    db.select().from(projetos),
+    db.select().from(clientes),
+  ]);
+
+  const clienteMap = new Map(listaClientes.map((c) => [c.id, c.nome]));
+  const projetoMap = new Map(
+    listaProjetos.map((p) => [
+      p.id,
+      { titulo: p.titulo, clienteId: p.clienteId, status: p.status },
+    ]),
+  );
+
+  const dataHoje = hoje();
+
+  const todos: RecebimentoComDetalhes[] = listaRecebimentos.map((r) => {
+    const proj = projetoMap.get(r.projetoId);
+    const clienteNome = proj ? clienteMap.get(proj.clienteId) ?? 'Cliente' : 'Cliente';
+
+    const diferenca = diferencaEmDias(dataHoje, r.vencimento);
+    const estaAtrasado = diferenca < 0 && r.recebidoEm === null;
+    const diasAtraso = estaAtrasado ? Math.abs(diferenca) : 0;
+
+    return {
+      id: r.id,
+      projetoId: r.projetoId,
+      projetoTitulo: proj?.titulo ?? 'Projeto',
+      clienteId: proj?.clienteId ?? '',
+      clienteNome,
+      descricao: r.descricao,
+      valorCentavos: r.valorCentavos,
+      vencimento: r.vencimento,
+      recebidoEm: r.recebidoEm,
+      metodoPagamento: r.metodoPagamento as MetodoPagamentoRecebimento | null,
+      lancamentoId: r.lancamentoId,
+      estaAtrasado,
+      diasAtraso,
+    };
+  });
+
+  // Separação em abas (§8.3)
+  const atrasados = todos.filter((r) => r.estaAtrasado);
+  const aReceber = todos.filter((r) => r.recebidoEm === null && !r.estaAtrasado);
+  const recebidos = todos
+    .filter((r) => r.recebidoEm !== null)
+    .sort((a, b) => (b.recebidoEm ?? '').localeCompare(a.recebidoEm ?? ''));
+
+  return {
+    todos,
+    aReceber,
+    atrasados,
+    recebidos,
+    totalAReceberCentavos: somar(aReceber.map((r) => r.valorCentavos)),
+    totalAtrasadoCentavos: somar(atrasados.map((r) => r.valorCentavos)),
+    totalRecebidoCentavos: somar(recebidos.map((r) => r.valorCentavos)),
+    projetos: listaProjetos.filter((p) => !['concluido', 'cancelado'].includes(p.status)),
+  };
+}

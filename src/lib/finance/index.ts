@@ -327,3 +327,72 @@ export function calcularDistribuicaoInvestimentos(
     })
     .sort((a, b) => b.saldoTotalCentavos - a.saldoTotalCentavos);
 }
+
+export interface ProjetoPipeline {
+  id: string;
+  status:
+    | 'lead'
+    | 'proposta'
+    | 'em_andamento'
+    | 'em_revisao'
+    | 'entregue'
+    | 'concluido'
+    | 'cancelado';
+  valorTotalCentavos: Centavos;
+}
+
+export const PROBABILIDADES_PADRAO_PB: Record<string, number> = {
+  lead: 1000, // 10%
+  proposta: 3000, // 30%
+  em_andamento: 9000, // 90%
+  em_revisao: 9500, // 95%
+  entregue: 9800, // 98%
+  concluido: 10000, // 100%
+  cancelado: 0, // 0%
+};
+
+/**
+ * Calcula o valor ponderado do pipeline com base na probabilidade de cada estágio (§9.3, §10.2 item 9).
+ */
+export function calcularPipelinePonderado(
+  projetos: readonly ProjetoPipeline[],
+  probabilidadesPb: Record<string, number> = PROBABILIDADES_PADRAO_PB,
+): Centavos {
+  let total: Centavos = 0;
+  for (const p of projetos) {
+    if (p.status === 'cancelado' || p.status === 'concluido') continue;
+    const probPb = probabilidadesPb[p.status] ?? 0;
+    total += percentualDe(p.valorTotalCentavos, probPb);
+  }
+  return total;
+}
+
+/**
+ * Validação de soma de parcelas vs valor total do projeto (§10.2 item 12).
+ * Não deve falhar silenciosamente, retorna a diferença exata.
+ */
+export function validarSomaParcelas(
+  valorTotalCentavos: Centavos,
+  parcelasCentavos: readonly Centavos[],
+): { valida: boolean; somaParcelasCentavos: Centavos; diferencaCentavos: Centavos } {
+  assertCentavos(valorTotalCentavos);
+  const soma = somar(parcelasCentavos);
+  const diferenca = valorTotalCentavos - soma;
+  return {
+    valida: diferenca === 0,
+    somaParcelasCentavos: soma,
+    diferencaCentavos: diferenca,
+  };
+}
+
+/**
+ * Calcula a reserva de emergência em meses (patrimônio ÷ despesa média) (§9.3).
+ */
+export function calcularReservaMeses(
+  patrimonioTotalCentavos: Centavos,
+  despesaMediaMensalCentavos: Centavos,
+): number {
+  if (despesaMediaMensalCentavos <= 0) return 0;
+  return Number((patrimonioTotalCentavos / despesaMediaMensalCentavos).toFixed(1));
+}
+

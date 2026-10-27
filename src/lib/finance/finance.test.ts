@@ -8,11 +8,16 @@ import {
   calcularSaldoDivida,
   calcularValorContribuicao,
   calcularValorHoraEfetivo,
+  calcularPipelinePonderado,
+  validarSomaParcelas,
+  calcularReservaMeses,
   type AssinaturaCalculo,
   type ContribuicaoCalculo,
   type ContribuicaoPagamentoCalculo,
   type LancamentoCalculo,
+  type ProjetoPipeline,
 } from './index';
+import { mesDe, primeiroDia, somarDias, ultimoDia } from '@/lib/dates';
 
 describe('Fórmulas de 7.1 (item 1)', () => {
   const comp = '2026-10';
@@ -281,3 +286,82 @@ describe('Valor/hora efetivo (item 10)', () => {
     expect(calcularValorHoraEfetivo(150000, -2)).toBeNull();
   });
 });
+
+describe('Aporte com e sem debitar do saldo do mês (item 8 e §7.3)', () => {
+  const comp = '2026-10';
+  const aporteCentavos = 100000; // R$ 1.000,00
+
+  it('com débito do mês: cria despesa comum que reduz o saldo do mês', () => {
+    const lancamentoDespesaAporte: LancamentoCalculo = {
+      id: 'aporte-debito',
+      tipo: 'despesa',
+      valorCentavos: aporteCentavos,
+      data: '2026-10-15',
+      trabalho: false,
+      // sem investimentoId, pois reduz o saldo corrente (origem: aporte)
+    };
+    const resumo = calcularResumoMes(500000, [lancamentoDespesaAporte], [], [], comp);
+    expect(resumo.despesasTotais).toBe(100000);
+    expect(resumo.saldoTotal).toBe(400000);
+  });
+
+  it('sem débito do mês: não cria lançamento de despesa no saldo do mês', () => {
+    const resumo = calcularResumoMes(500000, [], [], [], comp);
+    expect(resumo.despesasTotais).toBe(0);
+    expect(resumo.saldoTotal).toBe(500000);
+  });
+});
+
+describe('Pipeline ponderado e previsão de 3 meses (item 9 e §9.3)', () => {
+  it('calcula o valor ponderado com base na probabilidade de cada estágio', () => {
+    const projetos: ProjetoPipeline[] = [
+      { id: '1', status: 'lead', valorTotalCentavos: 1000000 }, // R$ 10.000 * 10% = R$ 1.000
+      { id: '2', status: 'proposta', valorTotalCentavos: 1000000 }, // R$ 10.000 * 30% = R$ 3.000
+      { id: '3', status: 'em_andamento', valorTotalCentavos: 1000000 }, // R$ 10.000 * 90% = R$ 9.000
+      { id: '4', status: 'em_revisao', valorTotalCentavos: 1000000 }, // R$ 10.000 * 95% = R$ 9.500
+      { id: '5', status: 'concluido', valorTotalCentavos: 1000000 }, // Ignorado no pipeline aberto
+      { id: '6', status: 'cancelado', valorTotalCentavos: 1000000 }, // Ignorado
+    ];
+
+    const ponderado = calcularPipelinePonderado(projetos);
+    // 100000 + 300000 + 900000 + 950000 = 2250000 (R$ 22.500,00)
+    expect(ponderado).toBe(2250000);
+  });
+
+  it('calcula reserva de emergência em meses (patrimônio ÷ despesa média)', () => {
+    const patrimonio = 3000000; // R$ 30.000,00
+    const despesaMedia = 500000; // R$ 5.000,00/mês
+    expect(calcularReservaMeses(patrimonio, despesaMedia)).toBe(6.0);
+    expect(calcularReservaMeses(patrimonio, 0)).toBe(0);
+  });
+});
+
+describe('Virada de mês e fuso America/Sao_Paulo (item 11)', () => {
+  it('garante que 31/out -> 1/nov não desloca dia', () => {
+    const out31 = '2026-10-31';
+    expect(mesDe(out31)).toBe('2026-10');
+    expect(ultimoDia('2026-10')).toBe('2026-10-31');
+
+    const nov01 = somarDias(out31, 1);
+    expect(nov01).toBe('2026-11-01');
+    expect(mesDe(nov01)).toBe('2026-11');
+    expect(primeiroDia('2026-11')).toBe('2026-11-01');
+  });
+});
+
+describe('Validação de parcelas vs valor total (item 12)', () => {
+  it('soma exata valida com sucesso sem diferença', () => {
+    const res = validarSomaParcelas(100000, [50000, 50000]);
+    expect(res.valida).toBe(true);
+    expect(res.diferencaCentavos).toBe(0);
+  });
+
+  it('soma divergente gera aviso com a diferença exata', () => {
+    // Total R$ 1.000,00, parcelas somam R$ 900,00
+    const res = validarSomaParcelas(100000, [50000, 40000]);
+    expect(res.valida).toBe(false);
+    expect(res.diferencaCentavos).toBe(10000);
+    expect(res.somaParcelasCentavos).toBe(90000);
+  });
+});
+
