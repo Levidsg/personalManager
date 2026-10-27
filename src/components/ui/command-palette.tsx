@@ -65,33 +65,33 @@ export function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-start justify-center pt-[15vh] p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-[15vh] backdrop-blur-xs"
       onClick={() => setAberto(false)}
     >
       <div
-        className="w-full max-w-lg rounded-2xl bg-card border border-border shadow-2xl overflow-hidden"
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <Command label="Paleta de Comandos">
-          <div className="flex items-center px-4 border-b border-border">
-            <Search className="size-4 text-tertiary shrink-0 mr-2.5" />
+          <div className="flex items-center border-b border-border px-4">
+            <Search className="mr-2.5 size-4 shrink-0 text-tertiary" />
             <Command.Input
               autoFocus
               placeholder="Digite um comando ou busque uma tela..."
-              className="w-full h-12 bg-transparent text-label text-body placeholder:text-tertiary focus:outline-hidden"
+              className="h-12 w-full bg-transparent text-body text-label placeholder:text-tertiary focus:outline-hidden"
             />
             <button
               type="button"
               onClick={() => setAberto(false)}
-              className="p-1.5 -mr-1 text-tertiary hover:text-label rounded-lg hover:bg-card-secondary transition-colors cursor-pointer"
+              className="-mr-1 cursor-pointer rounded-lg p-1.5 text-tertiary transition-colors hover:bg-card-secondary hover:text-label"
               aria-label="Fechar paleta de comandos"
             >
               <X className="size-4" />
             </button>
           </div>
 
-          <Command.List className="max-h-72 overflow-y-auto p-2 divide-y divide-border/40 text-caption1">
-            <Command.Empty className="py-6 text-center text-secondary text-caption1">
+          <Command.List className="max-h-72 divide-y divide-border/40 overflow-y-auto p-2 text-caption1">
+            <Command.Empty className="py-6 text-center text-caption1 text-secondary">
               Nenhum resultado encontrado.
             </Command.Empty>
 
@@ -100,7 +100,7 @@ export function CommandPalette() {
               <Command.Item
                 value="novo lancamento financeiro despesa receita"
                 onSelect={() => executar(() => router.push('/lancamentos'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <Plus className="size-4 text-accent" />
                 <span>Novo Lançamento Financeiro</span>
@@ -108,7 +108,7 @@ export function CommandPalette() {
               <Command.Item
                 value="novo projeto freela kanban"
                 onSelect={() => executar(() => router.push('/projetos'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <FolderKanban className="size-4 text-accent" />
                 <span>Novo Projeto Freela</span>
@@ -116,7 +116,7 @@ export function CommandPalette() {
               <Command.Item
                 value="registrar recebimento cobranca cliente"
                 onSelect={() => executar(() => router.push('/recebimentos'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <DollarSign className="size-4 text-emerald-600" />
                 <span>Registrar Recebimento</span>
@@ -124,7 +124,7 @@ export function CommandPalette() {
               <Command.Item
                 value="novo cliente contato cadastro"
                 onSelect={() => executar(() => router.push('/clientes'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <Users className="size-4 text-blue-500" />
                 <span>Novo Cliente</span>
@@ -132,7 +132,7 @@ export function CommandPalette() {
               <Command.Item
                 value="iniciar timer cronometro producao estudio freela"
                 onSelect={() => executar(() => router.push('/freela'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <Timer className="size-4 text-purple-500" />
                 <span>Iniciar Timer de Produção</span>
@@ -144,7 +144,7 @@ export function CommandPalette() {
               <Command.Item
                 value="resumo dashboard geral inicio home"
                 onSelect={() => executar(() => router.push('/'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <LayoutDashboard className="size-4 text-secondary" />
                 <span>Resumo / Dashboard Geral</span>
@@ -152,7 +152,7 @@ export function CommandPalette() {
               <Command.Item
                 value="estudio freela hub freelancer horas"
                 onSelect={() => executar(() => router.push('/freela'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <Briefcase className="size-4 text-secondary" />
                 <span>Estúdio Freela (Hub)</span>
@@ -160,7 +160,7 @@ export function CommandPalette() {
               <Command.Item
                 value="lancamentos mes extrato financeiro receitas despesas"
                 onSelect={() => executar(() => router.push('/lancamentos'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <Wallet className="size-4 text-secondary" />
                 <span>Lançamentos do Mês</span>
@@ -168,7 +168,7 @@ export function CommandPalette() {
               <Command.Item
                 value="projetos pipeline kanban lista"
                 onSelect={() => executar(() => router.push('/projetos'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <FolderKanban className="size-4 text-secondary" />
                 <span>Projetos & Pipeline Kanban</span>
@@ -176,7 +176,7 @@ export function CommandPalette() {
               <Command.Item
                 value="recebimentos parcelas faturas clientes"
                 onSelect={() => executar(() => router.push('/recebimentos'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <DollarSign className="size-4 text-secondary" />
                 <span>Recebimentos & Parcelas</span>
@@ -184,7 +184,7 @@ export function CommandPalette() {
               <Command.Item
                 value="catalogo de servicos precos tabela"
                 onSelect={() => executar(() => router.push('/servicos'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <Layers className="size-4 text-secondary" />
                 <span>Catálogo de Serviços</span>
@@ -192,7 +192,7 @@ export function CommandPalette() {
               <Command.Item
                 value="ajustes configuracoes aparencia tema perfil"
                 onSelect={() => executar(() => router.push('/ajustes'))}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-card-secondary data-[selected=true]:bg-card-secondary"
               >
                 <Settings className="size-4 text-secondary" />
                 <span>Ajustes & Configurações</span>
@@ -200,7 +200,7 @@ export function CommandPalette() {
             </Command.Group>
           </Command.List>
 
-          <div className="px-4 py-2 border-t border-border flex items-center justify-between text-[11px] text-tertiary">
+          <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11px] text-tertiary">
             <span>Pressione ↑↓ para navegar e Enter para selecionar</span>
             <span>ESC para fechar</span>
           </div>
