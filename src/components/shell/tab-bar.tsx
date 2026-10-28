@@ -56,7 +56,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="material fixed inset-x-0 bottom-0 z-40 flex h-[calc(var(--tabbar-h)+var(--safe-bottom))] items-start justify-around border-t border-separator pb-safe lg:hidden"
+      className="material fixed inset-x-0 bottom-0 z-40 flex h-[calc(var(--tabbar-h)+var(--safe-bottom))] items-start justify-around border-t border-separator pb-safe lg:hidden no-print print:hidden"
     >
       {ABAS.map((aba) => {
         const ativo = aba.ativoSe(pathname);

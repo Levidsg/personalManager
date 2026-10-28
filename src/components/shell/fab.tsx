@@ -16,7 +16,7 @@ import {
  */
 export function Fab() {
   return (
-    <div className="fixed right-4 bottom-[calc(var(--tabbar-h)+var(--safe-bottom)+0.75rem)] z-40 lg:hidden">
+    <div className="fixed right-4 bottom-[calc(var(--tabbar-h)+var(--safe-bottom)+0.75rem)] z-40 lg:hidden no-print print:hidden">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button

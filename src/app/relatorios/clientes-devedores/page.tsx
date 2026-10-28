@@ -38,7 +38,7 @@ export default async function RelatorioClientesDevedoresPage() {
       {/* Documento Impresso / Visualização Apple */}
       <div className="relatorio-documento rounded-2xl bg-card border border-border p-6 sm:p-8 space-y-6 shadow-xs">
         {/* Cabeçalho do Relatório */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-border">
+        <div className="flex flex-col sm:flex-row print:flex-row sm:items-start print:items-start justify-between gap-4 pb-6 border-b border-border">
           <div>
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-accent/10 text-accent text-caption2 font-bold uppercase tracking-wider mb-2">
               <FileText className="size-3.5" />
@@ -50,14 +50,14 @@ export default async function RelatorioClientesDevedoresPage() {
             </p>
           </div>
 
-          <div className="sm:text-right text-caption2 text-tertiary">
+          <div className="sm:text-right print:text-right text-caption2 text-tertiary">
             <div>Emitido em: <strong className="text-label">{formatarData(dados.emitidoEm)}</strong></div>
             <div>Status: <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Atualizado em tempo real</span></div>
           </div>
         </div>
 
         {/* Resumo de Indicadores Executivos */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 print:grid-cols-4 gap-3.5">
           <div className="p-3.5 rounded-xl bg-card-secondary border border-border space-y-1">
             <span className="text-caption2 text-tertiary block">Total a Receber</span>
             <span className="text-title3 font-bold text-label tabular-nums block">
@@ -106,7 +106,7 @@ export default async function RelatorioClientesDevedoresPage() {
                 className="rounded-xl border border-border overflow-hidden break-inside-avoid"
               >
                 {/* Cabeçalho do Cliente */}
-                <div className="p-4 bg-card-secondary flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border">
+                <div className="p-4 bg-card-secondary flex flex-col sm:flex-row print:flex-row sm:items-center print:items-center justify-between gap-3 border-b border-border">
                   <div>
                     <h3 className="text-subhead font-bold text-label flex items-center gap-2">
                       <span>{cliente.clienteNome}</span>
@@ -123,7 +123,7 @@ export default async function RelatorioClientesDevedoresPage() {
                     </div>
                   </div>
 
-                  <div className="sm:text-right">
+                  <div className="sm:text-right print:text-right">
                     <span className="text-caption2 text-tertiary block">Total a Pagar</span>
                     <span className="text-title3 font-bold text-label tabular-nums block">
                       {formatarMoeda(cliente.totalPendenteCentavos)}
@@ -138,15 +138,15 @@ export default async function RelatorioClientesDevedoresPage() {
                 </div>
 
                 {/* Tabela de Parcelas do Cliente */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-caption1">
+                <div className="overflow-x-auto print:overflow-visible">
+                  <table className="w-full text-left text-caption1 min-w-[560px] print:min-w-full">
                     <thead>
                       <tr className="border-b border-border text-caption2 font-semibold text-secondary bg-card">
                         <th className="py-2.5 px-4">Projeto</th>
                         <th className="py-2.5 px-4">Descrição da Parcela</th>
-                        <th className="py-2.5 px-4">Vencimento</th>
-                        <th className="py-2.5 px-4">Situação</th>
-                        <th className="py-2.5 px-4 text-right">Valor</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Vencimento</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Situação</th>
+                        <th className="py-2.5 px-4 text-right whitespace-nowrap">Valor</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -154,10 +154,10 @@ export default async function RelatorioClientesDevedoresPage() {
                         <tr key={p.id} className="hover:bg-card-secondary/50 transition-colors">
                           <td className="py-3 px-4 font-medium text-label">{p.projetoTitulo}</td>
                           <td className="py-3 px-4 text-secondary">{p.descricao}</td>
-                          <td className="py-3 px-4 text-secondary tabular-nums">
+                          <td className="py-3 px-4 text-secondary tabular-nums whitespace-nowrap">
                             {formatarData(p.vencimento)}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 whitespace-nowrap">
                             {p.estaAtrasado ? (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/10 text-red-500">
                                 Atrasada ({p.diasAtraso}d)
@@ -168,7 +168,7 @@ export default async function RelatorioClientesDevedoresPage() {
                               </span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-right font-bold text-label tabular-nums">
+                          <td className="py-3 px-4 text-right font-bold text-label tabular-nums whitespace-nowrap">
                             {formatarMoeda(p.valorCentavos)}
                           </td>
                         </tr>
@@ -182,7 +182,7 @@ export default async function RelatorioClientesDevedoresPage() {
         )}
 
         {/* Rodapé do Relatório */}
-        <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between text-caption2 text-tertiary gap-2">
+        <div className="pt-6 border-t border-border flex flex-col sm:flex-row print:flex-row items-center justify-between text-caption2 text-tertiary gap-2">
           <span>Controle Financeiro • Gestão Freelancer</span>
           <span>Página 1 de 1</span>
         </div>
