@@ -106,8 +106,19 @@ export interface DevedorClienteItem {
   parcelas: ParcelaDevedora[];
 }
 
+export interface ClienteSelecionadoRelatorio {
+  id: string;
+  nome: string;
+  empresa: string | null;
+  email: string | null;
+  telefone: string | null;
+  totalRecebidoCentavos: Centavos;
+  qtdParcelasRecebidas: number;
+}
+
 export interface RelatorioDevedoresData {
   emitidoEm: string;
+  clienteSelecionado: ClienteSelecionadoRelatorio | null;
   totalGeralPendenteCentavos: Centavos;
   totalGeralAtrasadoCentavos: Centavos;
   qtdClientesDevedores: number;
@@ -115,7 +126,9 @@ export interface RelatorioDevedoresData {
   clientes: DevedorClienteItem[];
 }
 
-export async function getRelatorioDevedores(): Promise<RelatorioDevedoresData> {
+export async function getRelatorioDevedores(
+  clienteId?: string,
+): Promise<RelatorioDevedoresData> {
   const [listaRecebimentos, listaProjetos, listaClientes] = await Promise.all([
     db.select().from(recebimentos).orderBy(asc(recebimentos.vencimento)),
     db.select().from(projetos),
@@ -128,9 +141,37 @@ export async function getRelatorioDevedores(): Promise<RelatorioDevedoresData> {
   );
 
   const dataHoje = hoje();
+  const clienteAlvo = clienteId ? (clienteMap.get(clienteId) ?? null) : null;
 
-  // Filtrar parcelas pendentes (não liquidadas)
-  const pendentes = listaRecebimentos.filter((r) => r.recebidoEm === null);
+  const recebidosClienteAlvo = clienteAlvo
+    ? listaRecebimentos.filter((r) => {
+        if (r.recebidoEm === null) return false;
+        const proj = projetoMap.get(r.projetoId);
+        return proj?.clienteId === clienteAlvo.id;
+      })
+    : [];
+
+  const clienteSelecionado: ClienteSelecionadoRelatorio | null = clienteAlvo
+    ? {
+        id: clienteAlvo.id,
+        nome: clienteAlvo.nome,
+        empresa: clienteAlvo.empresa,
+        email: clienteAlvo.email,
+        telefone: clienteAlvo.telefone,
+        totalRecebidoCentavos: somar(recebidosClienteAlvo.map((r) => r.valorCentavos)),
+        qtdParcelasRecebidas: recebidosClienteAlvo.length,
+      }
+    : null;
+
+  // Filtrar parcelas pendentes (não liquidadas), respeitando o filtro de cliente quando informado
+  const pendentes = listaRecebimentos.filter((r) => {
+    if (r.recebidoEm !== null) return false;
+    if (clienteId) {
+      const proj = projetoMap.get(r.projetoId);
+      return proj?.clienteId === clienteId;
+    }
+    return true;
+  });
 
   // Agrupar por cliente
   const agrupadoPorCliente = new Map<string, DevedorClienteItem>();
@@ -186,6 +227,7 @@ export async function getRelatorioDevedores(): Promise<RelatorioDevedoresData> {
 
   return {
     emitidoEm: dataHoje,
+    clienteSelecionado,
     totalGeralPendenteCentavos,
     totalGeralAtrasadoCentavos,
     qtdClientesDevedores: clientesDevedores.length,

@@ -7,8 +7,24 @@ import { PrintButton } from './print-button';
 
 export const dynamic = 'force-dynamic';
 
-export default async function RelatorioClientesDevedoresPage() {
-  const dados = await getRelatorioDevedores();
+interface RelatorioClientesDevedoresPageProps {
+  searchParams: Promise<{
+    clienteId?: string;
+  }>;
+}
+
+export default async function RelatorioClientesDevedoresPage({
+  searchParams,
+}: RelatorioClientesDevedoresPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const clienteIdFiltro =
+    typeof resolvedSearchParams.clienteId === 'string' &&
+    resolvedSearchParams.clienteId.trim() !== ''
+      ? resolvedSearchParams.clienteId.trim()
+      : undefined;
+
+  const dados = await getRelatorioDevedores(clienteIdFiltro);
+  const clienteSelecionado = dados.clienteSelecionado;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto py-2">
@@ -16,21 +32,39 @@ export default async function RelatorioClientesDevedoresPage() {
       <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-card border border-border shadow-xs">
         <div className="flex items-center gap-3">
           <Link
-            href="/recebimentos"
+            href={
+              clienteSelecionado
+                ? `/recebimentos?clienteId=${encodeURIComponent(clienteSelecionado.id)}`
+                : '/recebimentos'
+            }
             className="p-2 rounded-xl text-secondary hover:text-label hover:bg-card-secondary transition-colors"
             title="Voltar para Recebimentos"
           >
             <ArrowLeft className="size-5" />
           </Link>
           <div>
-            <h1 className="text-title3 font-bold text-label">Relatório de Cobrança por Cliente</h1>
+            <h1 className="text-title3 font-bold text-label">
+              {clienteSelecionado
+                ? `Relatório de Cobrança — ${clienteSelecionado.nome}`
+                : 'Relatório de Cobrança por Cliente'}
+            </h1>
             <p className="text-caption2 text-tertiary">
-              Posição de valores a receber e pendências por cliente
+              {clienteSelecionado
+                ? `Posição individual de valores a receber e pendências de ${clienteSelecionado.nome}`
+                : 'Posição de valores a receber e pendências por cliente'}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          {clienteSelecionado && (
+            <Link
+              href="/relatorios/clientes-devedores"
+              className="inline-flex items-center h-9 px-3.5 rounded-field bg-card-secondary border border-border text-caption1 font-medium text-label hover:bg-pressed transition-colors shadow-xs"
+            >
+              Ver Todos os Clientes
+            </Link>
+          )}
           <PrintButton />
         </div>
       </div>
@@ -44,9 +78,17 @@ export default async function RelatorioClientesDevedoresPage() {
               <FileText className="size-3.5" />
               <span>Relatório Financeiro</span>
             </div>
-            <h2 className="text-title2 font-bold text-label">Valores a Receber por Cliente</h2>
+            <h2 className="text-title2 font-bold text-label">
+              {clienteSelecionado
+                ? `Valores a Receber — ${clienteSelecionado.nome}`
+                : 'Valores a Receber por Cliente'}
+            </h2>
             <p className="text-caption1 text-secondary mt-1">
-              Extrato consolidado de parcelas e contratos em aberto
+              {clienteSelecionado
+                ? `Extrato individual de parcelas e contratos em aberto${
+                    clienteSelecionado.empresa ? ` • ${clienteSelecionado.empresa}` : ''
+                  }`
+                : 'Extrato consolidado de parcelas e contratos em aberto'}
             </p>
           </div>
 
@@ -73,9 +115,13 @@ export default async function RelatorioClientesDevedoresPage() {
           </div>
 
           <div className="p-3.5 rounded-xl bg-card-secondary border border-border space-y-1">
-            <span className="text-caption2 text-tertiary block">Clientes Devedores</span>
+            <span className="text-caption2 text-tertiary block">
+              {clienteSelecionado ? 'Total Já Recebido' : 'Clientes Devedores'}
+            </span>
             <span className="text-title3 font-bold text-label tabular-nums block">
-              {dados.qtdClientesDevedores}
+              {clienteSelecionado
+                ? formatarMoeda(clienteSelecionado.totalRecebidoCentavos)
+                : dados.qtdClientesDevedores}
             </span>
           </div>
 
@@ -93,9 +139,15 @@ export default async function RelatorioClientesDevedoresPage() {
             <div className="inline-flex size-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="size-6" />
             </div>
-            <h3 className="text-headline font-semibold text-label">Nenhum cliente com valores pendentes!</h3>
+            <h3 className="text-headline font-semibold text-label">
+              {clienteSelecionado
+                ? `${clienteSelecionado.nome} não possui valores pendentes!`
+                : 'Nenhum cliente com valores pendentes!'}
+            </h3>
             <p className="text-caption1 text-secondary max-w-sm mx-auto">
-              Todos os recebimentos e parcelas cadastradas já foram quitados e estão em dia.
+              {clienteSelecionado
+                ? `Todas as parcelas cadastradas para ${clienteSelecionado.nome} já foram quitadas e estão em dia.`
+                : 'Todos os recebimentos e parcelas cadastradas já foram quitados e estão em dia.'}
             </p>
           </div>
         ) : (

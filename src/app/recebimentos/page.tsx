@@ -6,8 +6,22 @@ import { NovoRecebimentoSheet } from '@/features/recebimentos/components/novo-re
 
 export const dynamic = 'force-dynamic';
 
-export default async function RecebimentosPage() {
-  const dados = await getRecebimentos();
+interface RecebimentosPageProps {
+  searchParams: Promise<{
+    clienteId?: string;
+  }>;
+}
+
+export default async function RecebimentosPage({ searchParams }: RecebimentosPageProps) {
+  const [dados, resolvedSearchParams] = await Promise.all([
+    getRecebimentos(),
+    searchParams,
+  ]);
+  const clienteIdInicial =
+    typeof resolvedSearchParams.clienteId === 'string' &&
+    resolvedSearchParams.clienteId.trim() !== ''
+      ? resolvedSearchParams.clienteId.trim()
+      : undefined;
 
   return (
     <div className="space-y-6">
@@ -45,6 +59,7 @@ export default async function RecebimentosPage() {
         totalRecebidoCentavos={dados.totalRecebidoCentavos}
         clientes={dados.clientes}
         projetos={dados.projetos}
+        clienteIdInicial={clienteIdInicial}
       />
     </div>
   );

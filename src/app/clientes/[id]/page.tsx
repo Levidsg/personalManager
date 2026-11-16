@@ -1,6 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Building, Mail, Phone, FolderKanban, CheckCircle2, Clock } from 'lucide-react';
+import {
+  ArrowLeft,
+  Building,
+  Mail,
+  Phone,
+  FolderKanban,
+  CheckCircle2,
+  Clock,
+  FileText,
+} from 'lucide-react';
 import { getClienteById } from '@/features/clientes/queries';
 import { formatarMoeda } from '@/lib/money';
 import { formatarData } from '@/lib/dates';
@@ -23,14 +32,23 @@ export default async function ClienteDetalhesPage(props: {
 
   return (
     <div className="space-y-6">
-      {/* Voltar */}
-      <div>
+      {/* Topo: Voltar + Exportar PDF do Cliente */}
+      <div className="flex items-center justify-between gap-4">
         <Link
           href="/clientes"
           className="inline-flex items-center gap-1.5 text-caption1 font-medium text-secondary hover:text-label transition-colors"
         >
           <ArrowLeft className="size-4" />
           <span>Voltar para clientes</span>
+        </Link>
+
+        <Link
+          href={`/relatorios/clientes-devedores?clienteId=${encodeURIComponent(cliente.id)}`}
+          className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-field bg-card border border-border text-caption1 font-semibold text-label hover:bg-card-secondary transition-colors shadow-xs"
+          title={`Exportar relatório em PDF somente de ${cliente.nome}`}
+        >
+          <FileText className="size-3.5 text-accent" />
+          <span>Exportar PDF ({cliente.nome})</span>
         </Link>
       </div>
 
