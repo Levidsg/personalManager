@@ -17,6 +17,7 @@ import {
   recebimentos,
 } from '@/db/schema';
 import {
+  dataNoMes,
   diferencaEmDias,
   hoje,
   intervaloDeDatas,
@@ -27,6 +28,7 @@ import {
   ultimoDia,
 } from '@/lib/dates';
 import {
+  assinaturaIncideNoMes,
   calcularPipelinePonderado,
   calcularReservaMeses,
   calcularResumoMes,
@@ -143,19 +145,38 @@ export async function getDashboardData(
     pagoEm: cp.pagoEm,
   }));
 
-  // Resumo Financeiro Geral (Tudo) - Mês Atual vs Mês Anterior (§7.1, §9.1)
-  const resumoGeralAtual = calcularResumoMes(
-    salarioBaseMes,
-    lancamentosCalc,
-    assinaturasCalc,
-    contPagCalc,
-    competencia,
+  // Assinaturas cujo dia de cobrança já chegou são debitadas como gasto daquele dia
+  const assinaturasDebitadasAtual = assinaturasCalc.filter(
+    (a) =>
+      assinaturaIncideNoMes(a, competencia) &&
+      dataNoMes(competencia, a.diaVencimento) <= dataHoje,
   );
+  const assinaturasDebitadasAnt = assinaturasCalc.filter(
+    (a) =>
+      assinaturaIncideNoMes(a, competenciaAnterior) &&
+      dataNoMes(competenciaAnterior, a.diaVencimento) <= dataHoje,
+  );
+  const assinaturasIncidentesMes = assinaturasCalc.filter((a) =>
+    assinaturaIncideNoMes(a, competencia),
+  );
+
+  // Resumo Financeiro Geral (Tudo) - Mês Atual vs Mês Anterior (§7.1, §9.1)
+  const resumoGeralAtual = {
+    ...calcularResumoMes(
+      salarioBaseMes,
+      lancamentosCalc,
+      assinaturasDebitadasAtual,
+      contPagCalc,
+      competencia,
+    ),
+    totalAssinaturas: somar(assinaturasIncidentesMes.map((a) => a.valorCentavos)),
+    qtdAssinaturasAtivas: assinaturasIncidentesMes.length,
+  };
 
   const resumoGeralAnt = calcularResumoMes(
     salarioBaseAnt,
     lancamentosCalc,
-    assinaturasCalc,
+    assinaturasDebitadasAnt,
     contPagCalc,
     competenciaAnterior,
   );
@@ -223,14 +244,26 @@ export async function getDashboardData(
     const lancsConsiderados =
       visao === 'freela' ? lancsDia.filter((l) => l.trabalho) : lancsDia;
 
+    // Assinaturas cujo dia de vencimento é este dia e já foram debitadas (dia <= hoje)
+    const assinaturasDebitadasNoDia =
+      diaStr <= dataHoje
+        ? assinaturasCalc.filter(
+            (ass) =>
+              assinaturaIncideNoMes(ass, competencia) &&
+              dataNoMes(competencia, ass.diaVencimento) === diaStr &&
+              (visao === 'tudo' || ass.trabalho),
+          )
+        : [];
+
     const entradasCentavos = somar(
       lancsConsiderados.filter((l) => l.tipo === 'receita').map((l) => l.valorCentavos),
     );
-    const saidasCentavos = somar(
-      lancsConsiderados
+    const saidasCentavos = somar([
+      ...lancsConsiderados
         .filter((l) => l.tipo === 'despesa' && !l.investimentoId)
         .map((l) => l.valorCentavos),
-    );
+      ...assinaturasDebitadasNoDia.map((ass) => ass.valorCentavos),
+    ]);
 
     // Marcadores de entregas de projetos e vencimentos
     const marcadores: DiaFluxo['marcadores'] = [];
@@ -253,14 +286,16 @@ export async function getDashboardData(
       }
     }
 
-    if (visao === 'tudo') {
-      for (const ass of todasAssinaturas) {
-        if (ass.ativa && ass.diaVencimento === diaNum) {
-          marcadores.push({
-            tipo: 'assinatura',
-            titulo: `Assinatura: ${ass.nome}`,
-          });
-        }
+    for (const ass of todasAssinaturas) {
+      if (
+        assinaturaIncideNoMes(ass, competencia) &&
+        dataNoMes(competencia, ass.diaVencimento) === diaStr &&
+        (visao === 'tudo' || ass.trabalho)
+      ) {
+        marcadores.push({
+          tipo: 'assinatura',
+          titulo: `Assinatura: ${ass.nome}`,
+        });
       }
     }
 
@@ -463,7 +498,27 @@ export async function getDashboardData(
     despesasPorCategoriaMap.set(catId, atual);
   }
 
-  const totalDespesasLancamentos = somar(despesasDoMes.map((d) => d.valorCentavos));
+  // Inclui assinaturas já debitadas na competência na distribuição por categoria
+  const totalAssinaturasDebitadas = somar(
+    assinaturasDebitadasAtual.map((a) => a.valorCentavos),
+  );
+  if (totalAssinaturasDebitadas > 0) {
+    const catAssinaturas = todasCategorias.find((c) =>
+      c.nome.toLowerCase().includes('assinatura'),
+    );
+    const catId = catAssinaturas?.id ?? 'cat-assinaturas';
+    const atual = despesasPorCategoriaMap.get(catId) ?? {
+      id: catId,
+      nome: catAssinaturas?.nome ?? 'Assinaturas',
+      cor: catAssinaturas?.cor ?? '#AF52DE',
+      totalCentavos: 0,
+    };
+    atual.totalCentavos += totalAssinaturasDebitadas;
+    despesasPorCategoriaMap.set(catId, atual);
+  }
+
+  const totalDespesasLancamentos =
+    somar(despesasDoMes.map((d) => d.valorCentavos)) + totalAssinaturasDebitadas;
   const despesasPorCategoria = Array.from(despesasPorCategoriaMap.values())
     .map((item) => {
       const perc =

@@ -35,7 +35,7 @@ export interface LancamentoItem {
   investimentoNome: string | null;
   trabalho: boolean;
   projetoId: string | null;
-  origem: 'manual' | 'recebimento' | 'aporte';
+  origem: 'manual' | 'recebimento' | 'aporte' | 'assinatura';
 }
 
 interface CategoriaOpcao {
@@ -256,6 +256,13 @@ export function LancamentosLista({ lancamentos, categorias }: LancamentosListaPr
                         {item.descricao}
                       </span>
 
+                      {/* Tag Assinatura Automática */}
+                      {item.origem === 'assinatura' && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-accent/15 text-accent border border-accent/20">
+                          Assinatura automática
+                        </span>
+                      )}
+
                       {/* Tag Pago com Investimento (A9) */}
                       {item.investimentoId && (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20">
@@ -304,15 +311,17 @@ export function LancamentosLista({ lancamentos, categorias }: LancamentosListaPr
                     {formatarMoeda(item.valorCentavos)}
                   </span>
 
-                  <button
-                    type="button"
-                    onClick={() => handleExcluir(item)}
-                    title="Excluir lançamento"
-                    aria-label="Excluir lançamento"
-                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-lg text-tertiary hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
+                  {item.origem !== 'assinatura' && (
+                    <button
+                      type="button"
+                      onClick={() => handleExcluir(item)}
+                      title="Excluir lançamento"
+                      aria-label="Excluir lançamento"
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-lg text-tertiary hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             );

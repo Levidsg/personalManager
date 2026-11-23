@@ -1,7 +1,8 @@
 import 'server-only';
-import { and, desc, eq, gte, lte } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, lte } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
+  assinaturaPagamentos,
   assinaturas,
   categorias,
   configuracoes,
@@ -10,38 +11,89 @@ import {
   investimentos,
   lancamentos,
 } from '@/db/schema';
-import { primeiroDia, somarMeses, ultimoDia } from '@/lib/dates';
-import { calcularResumoMes } from '@/lib/finance';
+import { dataNoMes, hoje, primeiroDia, somarMeses, ultimoDia } from '@/lib/dates';
+import { assinaturaIncideNoMes, calcularResumoMes } from '@/lib/finance';
 import type { Centavos } from '@/lib/money';
 
 export async function getLancamentosMes(competencia: string) {
   const dtInicio = primeiroDia(competencia);
   const dtFim = ultimoDia(competencia);
+  const dataHoje = hoje();
 
-  return db
-    .select({
-      id: lancamentos.id,
-      tipo: lancamentos.tipo,
-      descricao: lancamentos.descricao,
-      valorCentavos: lancamentos.valorCentavos,
-      data: lancamentos.data,
-      categoriaId: lancamentos.categoriaId,
-      categoriaNome: categorias.nome,
-      categoriaIcone: categorias.icone,
-      categoriaCor: categorias.cor,
-      metodoPagamento: lancamentos.metodoPagamento,
-      tipoEntrada: lancamentos.tipoEntrada,
-      investimentoId: lancamentos.investimentoId,
-      investimentoNome: investimentos.nome,
-      trabalho: lancamentos.trabalho,
-      projetoId: lancamentos.projetoId,
-      origem: lancamentos.origem,
+  const [lancamentosBanco, todasAssinaturas, pagamentosAssinatura, todasCategorias] =
+    await Promise.all([
+      db
+        .select({
+          id: lancamentos.id,
+          tipo: lancamentos.tipo,
+          descricao: lancamentos.descricao,
+          valorCentavos: lancamentos.valorCentavos,
+          data: lancamentos.data,
+          categoriaId: lancamentos.categoriaId,
+          categoriaNome: categorias.nome,
+          categoriaIcone: categorias.icone,
+          categoriaCor: categorias.cor,
+          metodoPagamento: lancamentos.metodoPagamento,
+          tipoEntrada: lancamentos.tipoEntrada,
+          investimentoId: lancamentos.investimentoId,
+          investimentoNome: investimentos.nome,
+          trabalho: lancamentos.trabalho,
+          projetoId: lancamentos.projetoId,
+          origem: lancamentos.origem,
+        })
+        .from(lancamentos)
+        .leftJoin(categorias, eq(lancamentos.categoriaId, categorias.id))
+        .leftJoin(investimentos, eq(lancamentos.investimentoId, investimentos.id))
+        .where(and(gte(lancamentos.data, dtInicio), lte(lancamentos.data, dtFim)))
+        .orderBy(desc(lancamentos.data), desc(lancamentos.criadoEm)),
+      db.select().from(assinaturas).orderBy(asc(assinaturas.diaVencimento)),
+      db
+        .select()
+        .from(assinaturaPagamentos)
+        .where(eq(assinaturaPagamentos.competencia, competencia)),
+      db.select().from(categorias),
+    ]);
+
+  const mapaPagamentosAss = new Map(
+    pagamentosAssinatura.map((p) => [p.assinaturaId, p.pagoEm]),
+  );
+
+  const categoriaAssinaturas = todasCategorias.find(
+    (c) => c.nome.toLowerCase().includes('assinatura'),
+  );
+
+  // Assinaturas ativas que incidem na competência e cujo dia de cobrança já chegou (ou foram marcadas como pagas) entram como gasto daquele dia
+  const gastosAssinaturas = todasAssinaturas
+    .filter((sub) => {
+      if (!assinaturaIncideNoMes(sub, competencia)) return false;
+      const dataVenc = dataNoMes(competencia, sub.diaVencimento);
+      return dataVenc <= dataHoje || mapaPagamentosAss.has(sub.id);
     })
-    .from(lancamentos)
-    .leftJoin(categorias, eq(lancamentos.categoriaId, categorias.id))
-    .leftJoin(investimentos, eq(lancamentos.investimentoId, investimentos.id))
-    .where(and(gte(lancamentos.data, dtInicio), lte(lancamentos.data, dtFim)))
-    .orderBy(desc(lancamentos.data), desc(lancamentos.criadoEm));
+    .map((sub) => {
+      const dataVenc = dataNoMes(competencia, sub.diaVencimento);
+      return {
+        id: `assinatura:${sub.id}:${competencia}`,
+        tipo: 'despesa' as const,
+        descricao: sub.nome,
+        valorCentavos: sub.valorCentavos,
+        data: dataVenc,
+        categoriaId: categoriaAssinaturas?.id ?? null,
+        categoriaNome: categoriaAssinaturas?.nome ?? 'Assinaturas',
+        categoriaIcone: sub.icone,
+        categoriaCor: sub.cor,
+        metodoPagamento: 'cartao_credito' as const,
+        tipoEntrada: null,
+        investimentoId: null,
+        investimentoNome: null,
+        trabalho: sub.trabalho,
+        projetoId: null,
+        origem: 'assinatura' as const,
+      };
+    });
+
+  return [...lancamentosBanco, ...gastosAssinaturas].sort((a, b) =>
+    b.data.localeCompare(a.data),
+  );
 }
 
 export async function getResumoEntradasMes(competencia: string) {

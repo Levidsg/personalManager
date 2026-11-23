@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/toast';
 import { iconePorChave } from '@/lib/icons';
+import { formatarData } from '@/lib/dates';
 import { formatarMoeda, type Centavos } from '@/lib/money';
 import { alternarAtiva, alternarStatusPagamento, excluirAssinatura } from '../actions';
 
@@ -23,6 +24,8 @@ export interface AssinaturaComStatusItem {
   ativa: boolean;
   trabalho: boolean;
   incide: boolean;
+  dataVencimento?: string;
+  debitadoAutomaticamente?: boolean;
   pago: boolean;
   pagoEm?: string;
   valorMensalizado: Centavos;
@@ -157,7 +160,7 @@ export function AssinaturasChecklist({
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5 text-caption2 text-tertiary mt-0.5">
+                <div className="flex items-center gap-1.5 text-caption2 text-tertiary mt-0.5 flex-wrap">
                   <span>Vence dia {item.diaVencimento}</span>
                   <span>•</span>
                   <span>
@@ -165,12 +168,23 @@ export function AssinaturasChecklist({
                       ? `Anual (mês ${item.mesVencimento})`
                       : 'Mensal'}
                   </span>
-                  {item.pago && item.pagoEm && (
+                  {item.pago && item.pagoEm ? (
                     <>
                       <span>•</span>
-                      <span className="text-emerald-600 dark:text-emerald-400">Pago</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                        {item.debitadoAutomaticamente
+                          ? `Debitado automaticamente em ${formatarData(item.pagoEm)} (gasto do dia)`
+                          : `Pago em ${formatarData(item.pagoEm)}`}
+                      </span>
                     </>
-                  )}
+                  ) : item.incide && item.ativa && item.dataVencimento ? (
+                    <>
+                      <span>•</span>
+                      <span className="text-secondary">
+                        Débito automático em {formatarData(item.dataVencimento)}
+                      </span>
+                    </>
+                  ) : null}
                 </div>
               </div>
             </div>
