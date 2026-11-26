@@ -47,7 +47,7 @@
    - **IMPORTANTE:** Marque `DATABASE_URL` para estar ativa **apenas nos ambientes Production e Development**. Desmarque o ambiente *Preview* para evitar que branches de teste modifiquem seu banco de produção.
    - Nenhuma variável deve conter o prefixo `NEXT_PUBLIC_`.
 3. **Região Serverless:**
-   - O repositório já inclui o arquivo [vercel.json](file:///vercel.json) configurado com `"regions": ["gru1"]` (São Paulo), garantindo proximidade física entre os nós de computação da Vercel e o banco do Supabase.
+   - O repositório já inclui o arquivo [vercel.json](file:///vercel.json) configurado com `"regions": ["iad1"]` (Washington, EUA), a mesma região do banco do Supabase (`us-east-1`). Se o banco for migrado para São Paulo (`sa-east-1`), troque para `gru1`.
 4. **Proteção de Acesso (Vercel Authentication):**
    - No painel da Vercel, acesse **Settings → Deployment Protection**.
    - Ative a opção **Vercel Authentication** e selecione **All Deployments** (ou adicione uma senha de proteção).
@@ -62,7 +62,7 @@ Antes de utilizar o app no dia a dia, confirme a conclusão dos seguintes pontos
 - [x] **Zero Segredos no Código:** Nenhuma credencial ou URL privada está salva em arquivos rastreados pelo Git (`pnpm check:secrets` passa sem avisos).
 - [x] **RLS 100% Ativo:** Todas as 18 tabelas possuem Row Level Security ativado no PostgreSQL (`pnpm db:check` exibe `18/18 tabelas protegidas`).
 - [x] **Noindex Ativo:** O arquivo `robots.txt` e os metadados do Next.js bloqueiam indexação em buscadores (`noindex, nofollow`).
-- [x] **Região gru1:** Funções serverless configuradas para rodar em São Paulo (`vercel.json`).
+- [x] **Região iad1:** Funções serverless rodando junto do banco Supabase (`us-east-1`) via `vercel.json`.
 - [x] **Deployment Protection:** Vercel Authentication ativado para proteger a URL pública.
 - [x] **PWA Instalável:** Ícones 192px e 512px configurados e manifesto reconhecido pelo navegador.
 

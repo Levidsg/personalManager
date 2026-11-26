@@ -1,33 +1,48 @@
 import 'server-only';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { attachDatabasePool } from '@vercel/functions';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import * as schema from './schema';
 
 const connectionString = process.env.DATABASE_URL;
 
 /**
- * Cliente Postgres via postgres.js configurado para o pooler (Supavisor) do Supabase.
- * `prepare: false` é obrigatório no modo transação (porta 6543) (§2, §5).
+ * Pool `pg` para o pooler (Supavisor) do Supabase em modo transação (porta 6543).
+ *
+ * Por que `pg` e não `postgres.js`: no Fluid Compute a instância é congelada entre
+ * requisições; conexões ociosas morrem nesse intervalo e o `postgres.js` ficava
+ * esperando para sempre num socket morto (páginas presas no skeleton até o
+ * timeout de 300s da Vercel). Com `pg`:
+ * - `attachDatabasePool` libera as conexões ociosas antes da suspensão;
+ * - `query_timeout` / `connectionTimeoutMillis` garantem que nenhuma consulta
+ *   trave indefinidamente — ela falha rápido e o `error.tsx` mostra "Tentar de novo".
+ * O `pg` não usa prepared statements nomeados por padrão, compatível com o pooler.
  */
-const globalForDb = globalThis as unknown as {
-  conn: ReturnType<typeof postgres> | undefined;
-};
+const globalForDb = globalThis as unknown as { pool: Pool | undefined };
 
-const client =
-  globalForDb.conn ??
-  (connectionString
-    ? postgres(connectionString, {
-        prepare: false,
-        max: 5,
-        idle_timeout: 10,
-        connect_timeout: 15,
-      })
-    : (null as unknown as ReturnType<typeof postgres>));
+function criarPool(url: string) {
+  const pool = new Pool({
+    connectionString: url,
+    max: 10,
+    idleTimeoutMillis: 5_000,
+    connectionTimeoutMillis: 8_000,
+    query_timeout: 15_000,
+    keepAlive: true,
+  });
+  // Erros em conexões ociosas não podem derrubar o processo.
+  pool.on('error', (erro) => {
+    console.error('[db] erro em conexão ociosa do pool:', erro.message);
+  });
+  attachDatabasePool(pool);
+  return pool;
+}
 
-globalForDb.conn = client;
+const pool = connectionString ? (globalForDb.pool ?? criarPool(connectionString)) : undefined;
 
-export const db = client
-  ? drizzle(client, { schema })
+if (pool) globalForDb.pool = pool;
+
+export const db = pool
+  ? drizzle(pool, { schema })
   : (new Proxy(
       {},
       {

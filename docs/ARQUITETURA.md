@@ -9,7 +9,7 @@ Este documento descreve a organização técnica, padrões arquiteturais e model
 - **Framework Web:** Next.js (App Router) com React e TypeScript em modo estrito.
 - **Estilização:** Tailwind CSS estruturado em torno das variáveis CSS do design system Apple HIG (`src/app/globals.css`).
 - **ORM e Banco de Dados:** Drizzle ORM sobre PostgreSQL no Supabase (região São Paulo `sa-east-1`).
-- **Driver de Conexão:** `postgres` (`postgres.js`) configurado estritamente com `prepare: false` para compatibilidade total com o PgBouncer/Supabase Transaction Pooler (porta 6543).
+- **Driver de Conexão:** `pg` (node-postgres) com `attachDatabasePool` (`@vercel/functions`) e timeouts curtos, compatível com o Supabase Transaction Pooler (porta 6543). Os scripts locais (`scripts/`) seguem usando `postgres.js`.
 - **Testes Unitários:** Vitest executando com TypeScript nativo.
 - **Testes de Ponta a Ponta:** Playwright com `@axe-core/playwright` para auditoria de acessibilidade.
 
@@ -67,7 +67,7 @@ personalManager/
 ├── tests/                     # Testes de unidade, integração e E2E
 │   ├── unit/                  # Fórmulas financeiras, datas e validações
 │   └── e2e/                   # Fluxo de ponta a ponta com Playwright
-└── vercel.json                # Configuração da região gru1 (São Paulo)
+└── vercel.json                # Região iad1 (mesma região do banco Supabase, us-east-1)
 ```
 
 ---
@@ -82,16 +82,21 @@ personalManager/
 ### 3.2 Conexão com Supabase Pooler
 - Para ambientes Serverless (Vercel) com dezenas de execuções simultâneas, a conexão utiliza o PgBouncer do Supabase em modo **Transaction Pooling** (porta 6543):
   ```typescript
-  import postgres from 'postgres';
-  import { drizzle } from 'drizzle-orm/postgres-js';
-  import { env } from '@/env';
+  import { attachDatabasePool } from '@vercel/functions';
+  import { drizzle } from 'drizzle-orm/node-postgres';
+  import { Pool } from 'pg';
 
-  const client = postgres(env.DATABASE_URL, {
-    prepare: false, // Obrigatório para PgBouncer transaction mode
-    max: 1,         // 1 conexão por contêiner serverless
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10,
+    idleTimeoutMillis: 5_000,
+    connectionTimeoutMillis: 8_000, // falha rápido se o pooler não responder
+    query_timeout: 15_000,          // nenhuma consulta trava a página indefinidamente
   });
-  export const db = drizzle(client, { schema });
+  attachDatabasePool(pool); // libera conexões ociosas antes do Fluid Compute congelar a instância
+  export const db = drizzle(pool, { schema });
   ```
+- Com `postgres.js`, conexões mortas durante a suspensão da instância deixavam a requisição pendurada até o timeout de 300s da Vercel (tela presa no skeleton). Falhas agora caem em `src/app/error.tsx` com "Tentar de novo".
 
 ---
 
