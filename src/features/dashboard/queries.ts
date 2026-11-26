@@ -1,6 +1,6 @@
-'server-only';
+import 'server-only';
 
-import { asc, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
   ajustesSalario,
@@ -77,40 +77,47 @@ export async function getDashboardData(
   const dataHoje = hoje();
   const competenciaAnterior = somarMeses(competencia, -1);
 
-  // Lote 1: Configurações, Ajustes de Salário e Categorias
-  const [config, ajustesSal, todasCategorias] = await Promise.all([
+  // Lançamentos só são usados no mês atual e no anterior (resumo, comparação e fluxo do mês).
+  const inicioJanela = primeiroDia(competenciaAnterior);
+  const fimJanela = ultimoDia(competencia);
+
+  // Todas as consultas são independentes: um único lote paralelo evita idas e voltas
+  // sequenciais ao banco.
+  const [
+    config,
+    ajustesSal,
+    todasCategorias,
+    todosLancamentos,
+    todasAssinaturas,
+    todosPagContribuicoes,
+    todasDividas,
+    todosInvestimentos,
+    todosProjetos,
+    todosClientes,
+    todosRecebimentos,
+  ] = await Promise.all([
     db.query.configuracoes.findFirst({ where: eq(configuracoes.id, ID_CONFIGURACOES_UNICA) }),
     db
       .select()
       .from(ajustesSalario)
       .where(inArray(ajustesSalario.competencia, [competencia, competenciaAnterior])),
     db.select().from(categorias),
-  ]);
-
-  const ajusteSalarioAtual = ajustesSal.find((a) => a.competencia === competencia);
-  const ajusteSalarioAnt = ajustesSal.find((a) => a.competencia === competenciaAnterior);
-
-  // Lote 2: Finanças Pessoais
-  const [
-    todosLancamentos,
-    todasAssinaturas,
-    todosPagContribuicoes,
-    todasDividas,
-    todosInvestimentos,
-  ] = await Promise.all([
-    db.select().from(lancamentos).orderBy(desc(lancamentos.data)),
+    db
+      .select()
+      .from(lancamentos)
+      .where(and(gte(lancamentos.data, inicioJanela), lte(lancamentos.data, fimJanela)))
+      .orderBy(desc(lancamentos.data)),
     db.select().from(assinaturas),
     db.select().from(contribuicaoPagamentos),
     db.select().from(dividas),
     db.select().from(investimentos),
-  ]);
-
-  // Lote 3: Estúdio Freelancer
-  const [todosProjetos, todosClientes, todosRecebimentos] = await Promise.all([
     db.select().from(projetos).orderBy(asc(projetos.prazoEntrega)),
     db.select().from(clientes),
     db.select().from(recebimentos),
   ]);
+
+  const ajusteSalarioAtual = ajustesSal.find((a) => a.competencia === competencia);
+  const ajusteSalarioAnt = ajustesSal.find((a) => a.competencia === competenciaAnterior);
 
   const salarioBaseMes =
     ajusteSalarioAtual?.valorCentavos ?? config?.salarioBaseCentavos ?? 0;
