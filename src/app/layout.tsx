@@ -20,9 +20,6 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Controle',
   },
-  icons: {
-    apple: '/icons/icon-192.svg',
-  },
   robots: {
     index: false,
     follow: false,
