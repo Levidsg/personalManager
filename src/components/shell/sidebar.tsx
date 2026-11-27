@@ -18,6 +18,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/cn';
+import { PontoPendencia } from '@/features/pendencias/components/pendencias';
 
 interface ItemNavegacao {
   rotulo: string;
@@ -70,7 +71,7 @@ export function Sidebar({ recolhida = false, nomeApp = 'Controle' }: SidebarProp
         title={recolhida ? item.rotulo : undefined}
         aria-current={ativo ? 'page' : undefined}
         className={cn(
-          'flex h-9 items-center gap-2.5 rounded-control px-2.5 text-subhead font-medium transition-colors',
+          'relative flex h-9 items-center gap-2.5 rounded-control px-2.5 text-subhead font-medium transition-colors',
           ativo
             ? 'bg-fill text-accent font-semibold'
             : 'text-label-2 hover:bg-pressed hover:text-label',
@@ -78,7 +79,11 @@ export function Sidebar({ recolhida = false, nomeApp = 'Controle' }: SidebarProp
         )}
       >
         <Icone className="size-4 shrink-0" strokeWidth={ativo ? 2.2 : 1.75} />
-        {!recolhida && <span className="truncate">{item.rotulo}</span>}
+        {!recolhida && <span className="flex-1 truncate">{item.rotulo}</span>}
+        <PontoPendencia
+          rota={item.href}
+          className={recolhida ? 'absolute right-1.5 top-1.5' : undefined}
+        />
       </Link>
     );
   };

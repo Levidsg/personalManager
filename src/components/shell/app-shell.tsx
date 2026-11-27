@@ -8,6 +8,11 @@ import { TabBar } from '@/components/shell/tab-bar';
 import { Fab } from '@/components/shell/fab';
 import { Toaster } from '@/components/ui/toast';
 import { CommandPalette } from '@/components/ui/command-palette';
+import {
+  AvisoPendencias,
+  PendenciasProvider,
+} from '@/features/pendencias/components/pendencias';
+import type { Pendencia } from '@/features/pendencias/tipos';
 
 const CHAVE_SIDEBAR = 'controle_sidebar_recolhida';
 
@@ -31,9 +36,10 @@ function subscribeSidebar(callback: () => void) {
 export interface AppShellProps {
   children: ReactNode;
   nomeApp?: string;
+  pendencias: Promise<Pendencia[]>;
 }
 
-export function AppShell({ children, nomeApp = 'Controle' }: AppShellProps) {
+export function AppShell({ children, nomeApp = 'Controle', pendencias }: AppShellProps) {
   const sidebarRecolhida = useSyncExternalStore(
     subscribeSidebar,
     getSidebarSnapshot,
@@ -47,6 +53,7 @@ export function AppShell({ children, nomeApp = 'Controle' }: AppShellProps) {
   };
 
   return (
+    <PendenciasProvider pendencias={pendencias}>
     <div className="flex min-h-screen bg-canvas text-label overflow-x-hidden max-w-full w-full">
       {/* Sidebar no desktop (fixa) */}
       <Sidebar recolhida={sidebarRecolhida} nomeApp={nomeApp} />
@@ -67,6 +74,7 @@ export function AppShell({ children, nomeApp = 'Controle' }: AppShellProps) {
         />
 
         <main className="flex-1 px-gutter py-4 lg:py-6 pb-[calc(var(--tabbar-h)+var(--safe-bottom)+2rem)] lg:pb-8 max-w-[var(--content-max)] w-full mx-auto min-w-0 overflow-x-hidden">
+          <AvisoPendencias />
           {children}
         </main>
       </div>
@@ -81,5 +89,6 @@ export function AppShell({ children, nomeApp = 'Controle' }: AppShellProps) {
       {/* Paleta de comandos (⌘K) */}
       <CommandPalette />
     </div>
+    </PendenciasProvider>
   );
 }

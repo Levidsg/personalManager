@@ -18,7 +18,6 @@ import {
 } from '@/db/schema';
 import {
   dataNoMes,
-  diferencaEmDias,
   hoje,
   intervaloDeDatas,
   mesDe,
@@ -38,7 +37,7 @@ import {
   type LancamentoCalculo,
   type ProjetoPipeline,
 } from '@/lib/finance';
-import { formatarMoeda, somar, type Centavos } from '@/lib/money';
+import { somar, type Centavos } from '@/lib/money';
 
 export interface DiaFluxo {
   data: string; // YYYY-MM-DD
@@ -60,14 +59,6 @@ export interface ItemAgenda {
   valorCentavos: Centavos | null;
   trabalho: boolean;
   atrasado: boolean;
-}
-
-export interface ItemAtencao {
-  id: string;
-  tipo: 'recebimento_atrasado' | 'projeto_atrasado' | 'revisoes_excedidas' | 'assinatura_vencendo';
-  titulo: string;
-  descricao: string;
-  link?: string;
 }
 
 export async function getDashboardData(
@@ -401,57 +392,6 @@ export async function getDashboardData(
   // Ordena agenda cronologicamente
   agenda.sort((a, b) => a.data.localeCompare(b.data));
 
-  // 9.3 Bloco Atenção (§9.3: só aparece se houver pendências)
-  const atencoes: ItemAtencao[] = [];
-
-  // Recebimentos atrasados
-  for (const rec of todosRecebimentos) {
-    if (!rec.recebidoEm && rec.vencimento < dataHoje) {
-      const proj = projetoMap.get(rec.projetoId);
-      const diasAtraso = diferencaEmDias(dataHoje, rec.vencimento);
-      atencoes.push({
-        id: `at-rec-${rec.id}`,
-        tipo: 'recebimento_atrasado',
-        titulo: `Recebimento em atraso há ${Math.abs(diasAtraso)} dia(s)`,
-        descricao: `${rec.descricao} (${proj?.titulo ?? 'Projeto'}) — ${formatarMoeda(
-          rec.valorCentavos,
-        )}`,
-        link: '/recebimentos',
-      });
-    }
-  }
-
-  // Projetos atrasados
-  for (const proj of todosProjetos) {
-    if (!['concluido', 'cancelado'].includes(proj.status) && proj.prazoEntrega < dataHoje) {
-      const diasAtraso = diferencaEmDias(dataHoje, proj.prazoEntrega);
-      atencoes.push({
-        id: `at-proj-${proj.id}`,
-        tipo: 'projeto_atrasado',
-        titulo: `Projeto com entrega atrasada (${Math.abs(diasAtraso)} dias)`,
-        descricao: `${proj.titulo} — cliente ${clienteMap.get(proj.clienteId) ?? ''}`,
-        link: `/projetos/${proj.id}`,
-      });
-    }
-  }
-
-  // Revisões excedidas ou no teto
-  for (const proj of todosProjetos) {
-    if (
-      !['concluido', 'cancelado'].includes(proj.status) &&
-      proj.revisoesUsadas >= proj.revisoesIncluidas &&
-      proj.revisoesIncluidas > 0
-    ) {
-      atencoes.push({
-        id: `at-rev-${proj.id}`,
-        tipo: 'revisoes_excedidas',
-        titulo: `Limite de revisões atingido (${proj.revisoesUsadas}/${proj.revisoesIncluidas})`,
-        descricao: `${proj.titulo} atingiu o pacote acordado. Próximas revisões devem ser cobradas.`,
-        link: `/projetos/${proj.id}`,
-      });
-    }
-  }
-
   // 9.3 Previsão Próximos 3 Meses + Patrimônio & Reserva (§9.3, P1)
   const pipelineProjetos: ProjetoPipeline[] = todosProjetos.map((p) => ({
     id: p.id,
@@ -539,34 +479,6 @@ export async function getDashboardData(
     })
     .sort((a, b) => b.totalCentavos - a.totalCentavos);
 
-  // Concentração de Clientes (§9.3)
-  const limiteConcentracao = config?.limiteConcentracaoCliente ?? 40;
-  const faturamentoPorCliente = new Map<string, Centavos>();
-  const todosRecebidosGeral = todosRecebimentos.filter((r) => r.recebidoEm !== null);
-  const faturamentoTotalGeral = somar(todosRecebidosGeral.map((r) => r.valorCentavos));
-
-  for (const r of todosRecebidosGeral) {
-    const proj = projetoMap.get(r.projetoId);
-    if (proj) {
-      const atual = faturamentoPorCliente.get(proj.clienteId) ?? 0;
-      faturamentoPorCliente.set(proj.clienteId, atual + r.valorCentavos);
-    }
-  }
-
-  let clienteConcentracaoAlerta: { nome: string; percentualFormatado: string } | null = null;
-  for (const [cliId, fat] of faturamentoPorCliente.entries()) {
-    if (faturamentoTotalGeral > 0) {
-      const perc = (fat * 100) / faturamentoTotalGeral;
-      if (perc > limiteConcentracao) {
-        clienteConcentracaoAlerta = {
-          nome: clienteMap.get(cliId) ?? 'Cliente',
-          percentualFormatado: `${perc.toFixed(1).replace('.', ',')}%`,
-        };
-        break;
-      }
-    }
-  }
-
   return {
     competencia,
     competenciaAnterior,
@@ -574,7 +486,6 @@ export async function getDashboardData(
     config: {
       nomeApp: config?.nomeApp ?? 'Controle',
       nomeUsuario: config?.nomeExibicao ?? null,
-      limiteConcentracao,
     },
     indicadores: {
       tudo: {
@@ -617,7 +528,6 @@ export async function getDashboardData(
     },
     fluxoDoMes,
     agenda,
-    atencoes,
     previsao: {
       totalParcelas3Meses,
       pipelinePonderado,
@@ -626,6 +536,5 @@ export async function getDashboardData(
       reservaMeses,
     },
     despesasPorCategoria,
-    clienteConcentracaoAlerta,
   };
 }

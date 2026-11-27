@@ -16,7 +16,7 @@ export default async function ClientesPage() {
         <div>
           <h2 className="text-title1 font-bold tracking-tight text-label">Clientes</h2>
           <p className="text-footnote text-secondary mt-0.5">
-            Carteira de clientes, histórico de faturamento e índice de concentração
+            Carteira de clientes e histórico de faturamento
           </p>
         </div>
 
@@ -33,10 +33,9 @@ export default async function ClientesPage() {
         </div>
       </div>
 
-      {/* Lista com Busca, Filtros e Indicador de Concentração */}
+      {/* Lista com Busca e Filtros */}
       <ClientesLista
         clientes={dados.clientes}
-        limiteConcentracao={dados.limiteConcentracao}
       />
     </div>
   );

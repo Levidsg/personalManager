@@ -9,10 +9,9 @@ import type { ClienteComMetricas } from '../queries';
 
 export interface ClientesListaProps {
   clientes: ClienteComMetricas[];
-  limiteConcentracao: number;
 }
 
-export function ClientesLista({ clientes, limiteConcentracao }: ClientesListaProps) {
+export function ClientesLista({ clientes }: ClientesListaProps) {
   const [busca, setBusca] = useState('');
   const [statusFiltro, setStatusFiltro] = useState<'ativos' | 'arquivados'>('ativos');
 
@@ -76,7 +75,6 @@ export function ClientesLista({ clientes, limiteConcentracao }: ClientesListaPro
             <ClienteCard
               key={cliente.id}
               cliente={cliente}
-              limiteConcentracao={limiteConcentracao}
             />
           ))}
         </div>

@@ -176,7 +176,7 @@ export default async function FreelaHubPage() {
                   Clientes
                 </span>
                 <span className="text-caption2 text-tertiary">
-                  Carteira e índice de concentração de receita
+                  Carteira e histórico de faturamento
                 </span>
               </div>
             </div>

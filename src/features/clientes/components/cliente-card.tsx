@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import {
-  AlertTriangle,
   Archive,
   ArchiveRestore,
   Building,
@@ -19,13 +18,7 @@ import { formatarMoeda } from '@/lib/money';
 import { alternarArquivado, atualizarCliente, excluirCliente } from '../actions';
 import type { ClienteComMetricas } from '../queries';
 
-export function ClienteCard({
-  cliente,
-  limiteConcentracao,
-}: {
-  cliente: ClienteComMetricas;
-  limiteConcentracao: number;
-}) {
+export function ClienteCard({ cliente }: { cliente: ClienteComMetricas }) {
   const [, startTransition] = useTransition();
   const [sheetEditarAberto, setSheetEditarAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -164,55 +157,16 @@ export function ClienteCard({
           </div>
         </div>
 
-        {/* Faturamento e Concentração (§8.1) */}
-        <div className="space-y-1.5">
-          <div className="flex items-baseline justify-between">
-            <div>
-              <span className="text-caption2 text-tertiary block">Recebido</span>
-              <span className="text-xl font-bold text-label tabular-nums">
-                {formatarMoeda(cliente.totalRecebidoCentavos)}
-              </span>
-              {cliente.totalAReceberCentavos > 0 && (
-                <span className="text-caption2 text-amber-600 dark:text-amber-400 block tabular-nums">
-                  + {formatarMoeda(cliente.totalAReceberCentavos)} a receber
-                </span>
-              )}
-            </div>
-            <div className="text-right">
-              <span className="text-caption2 text-tertiary block">Concentração</span>
-              <span
-                className={`text-subhead font-bold tabular-nums ${
-                  cliente.alertaConcentracao
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-secondary'
-                }`}
-              >
-                {cliente.percentualFormatado}
-              </span>
-            </div>
-          </div>
-
-          {/* Barra de Concentração */}
-          <div className="h-1.5 w-full rounded-full bg-card-secondary overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                cliente.alertaConcentracao ? 'bg-amber-500' : 'bg-accent'
-              }`}
-              style={{
-                width: `${Math.min(100, cliente.percentualConcentracaoPb / 100)}%`,
-              }}
-            />
-          </div>
-
-          {/* Alerta de Concentração Alta (§8.1) */}
-          {cliente.alertaConcentracao && (
-            <div className="flex items-center gap-1.5 text-caption2 text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg mt-1">
-              <AlertTriangle className="size-3 shrink-0 stroke-[2.2]" />
-              <span>
-                Concentração alta ({cliente.percentualFormatado}) — acima do teto de{' '}
-                {limiteConcentracao}%
-              </span>
-            </div>
+        {/* Faturamento */}
+        <div>
+          <span className="text-caption2 text-tertiary block">Recebido</span>
+          <span className="text-xl font-bold text-label tabular-nums">
+            {formatarMoeda(cliente.totalRecebidoCentavos)}
+          </span>
+          {cliente.totalAReceberCentavos > 0 && (
+            <span className="text-caption2 text-amber-600 dark:text-amber-400 block tabular-nums">
+              + {formatarMoeda(cliente.totalAReceberCentavos)} a receber
+            </span>
           )}
         </div>
 

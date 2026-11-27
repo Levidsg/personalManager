@@ -2,14 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Switch } from '@/components/ui/switch';
 import { formatarMes, somarMeses } from '@/lib/dates';
 import type { getDashboardData } from '../queries';
 import { IndicadoresFaixa } from './indicadores-faixa';
 import { FluxoDoMesChart } from './fluxo-do-mes-chart';
-import { AtencaoBanner } from './atencao-banner';
 import { ProximosDiasAgenda } from './proximos-dias-agenda';
 import { PrevisaoBloco } from './previsao-bloco';
 import { DespesasCategoriaBloco } from './despesas-categoria-bloco';
@@ -91,21 +90,6 @@ export function DashboardShell({ dados }: { dados: DashboardData }) {
           </div>
         </div>
       </div>
-
-      {/* Alerta de Concentração Alta de Cliente (§9.3) */}
-      {dados.clienteConcentracaoAlerta && (
-        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-2.5 text-caption1 text-amber-800 dark:text-amber-400">
-          <AlertTriangle className="size-4 shrink-0 stroke-[2.2]" />
-          <span>
-            Atenção de Carteira: o cliente <strong>{dados.clienteConcentracaoAlerta.nome}</strong>{' '}
-            representa <strong>{dados.clienteConcentracaoAlerta.percentualFormatado}</strong> do
-            faturamento total do estúdio (limite seguro: {dados.config.limiteConcentracao}%).
-          </span>
-        </div>
-      )}
-
-      {/* Bloco de Atenção para pendências críticas (§9.3) */}
-      <AtencaoBanner itens={dados.atencoes} />
 
       {/* Faixa de Indicadores (§9.1 - grade 2x2 no celular, 4 colunas desktop) */}
       <IndicadoresFaixa

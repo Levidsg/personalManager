@@ -44,7 +44,8 @@ export function NovoProjetoSheet({
   const [valorTotalCentavos, setValorTotalCentavos] = useState<Centavos>(
     servicos[0]?.precoBaseCentavos ?? 100000,
   );
-  const [dataInicio, setDataInicio] = useState(dataHoje);
+  // Início = hoje; prazo = hoje + prazo médio do serviço (campos não aparecem no formulário).
+  const dataInicio = dataHoje;
   const [prazoEntrega, setPrazoEntrega] = useState(
     somarDias(dataHoje, servicos[0]?.prazoMedioDias ?? 14),
   );
@@ -216,7 +217,7 @@ export function NovoProjetoSheet({
 
       <SheetContent
         titulo="Novo Projeto Freela"
-        descricao="Cadastre o escopo, prazos e cronograma de recebimentos"
+        descricao="Cadastre o escopo e o cronograma de recebimentos"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-2 pb-6">
           {/* Cliente */}
@@ -292,44 +293,6 @@ export function NovoProjetoSheet({
               onChange={handleValorTotalChange}
               id="novo-projeto-valor"
             />
-          </div>
-
-          {/* Datas: Início e Prazo */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-caption1 font-medium text-secondary block mb-1.5">
-                Data de Início
-              </label>
-              <input
-                type="date"
-                required
-                value={dataInicio}
-                onChange={(e) => {
-                  setDataInicio(e.target.value);
-                  if (presetParcelas === '50_50') {
-                    aplicarPreset('50_50', valorTotalCentavos, prazoEntrega, e.target.value);
-                  }
-                }}
-                className="w-full h-11 px-3.5 rounded-xl bg-card border border-border text-label text-body focus:outline-hidden focus:ring-2 focus:ring-accent/30"
-              />
-            </div>
-            <div>
-              <label className="text-caption1 font-medium text-secondary block mb-1.5">
-                Prazo de Entrega
-              </label>
-              <input
-                type="date"
-                required
-                value={prazoEntrega}
-                onChange={(e) => {
-                  setPrazoEntrega(e.target.value);
-                  if (presetParcelas !== 'personalizado') {
-                    aplicarPreset(presetParcelas, valorTotalCentavos, e.target.value);
-                  }
-                }}
-                className="w-full h-11 px-3.5 rounded-xl bg-card border border-border text-label text-body focus:outline-hidden focus:ring-2 focus:ring-accent/30"
-              />
-            </div>
           </div>
 
           {/* Revisões e Horas Estimadas */}

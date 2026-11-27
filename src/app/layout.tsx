@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import type { ReactNode } from 'react';
 import './globals.css';
 import { AppShell } from '@/components/shell/app-shell';
+import { getPendencias } from '@/features/pendencias/queries';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -50,6 +51,12 @@ export default async function RootLayout({
       ? aparenciaCookie
       : undefined;
 
+  // Não aguarda: o ponto/aviso de pendências carrega em paralelo, sem segurar a página.
+  const pendencias = getPendencias().catch((erro: unknown) => {
+    console.error('[pendencias]', erro);
+    return [];
+  });
+
   return (
     <html
       lang="pt-BR"
@@ -58,7 +65,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="antialiased">
-        <AppShell>{children}</AppShell>
+        <AppShell pendencias={pendencias}>{children}</AppShell>
       </body>
     </html>
   );

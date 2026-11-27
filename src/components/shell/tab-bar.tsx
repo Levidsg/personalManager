@@ -4,6 +4,7 @@ import { LayoutDashboard, Briefcase, Wallet, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/cn';
+import { PontoPendencia } from '@/features/pendencias/components/pendencias';
 
 const ABAS = [
   {
@@ -71,7 +72,10 @@ export function TabBar() {
               ativo ? 'text-accent font-medium' : 'text-label-2 hover:text-label',
             )}
           >
-            <Icone className="size-5" strokeWidth={ativo ? 2.2 : 1.75} />
+            <span className="relative">
+              <Icone className="size-5" strokeWidth={ativo ? 2.2 : 1.75} />
+              <PontoPendencia rota={aba.href} className="absolute -right-1 -top-0.5" />
+            </span>
             <span className="text-caption2 leading-none">{aba.rotulo}</span>
           </Link>
         );
