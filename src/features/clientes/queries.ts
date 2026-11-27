@@ -4,8 +4,6 @@ import { asc, desc, eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
   clientes,
-  configuracoes,
-  ID_CONFIGURACOES_UNICA,
   projetos,
   recebimentos,
 } from '@/db/schema';
@@ -25,23 +23,15 @@ export interface ClienteComMetricas {
   projetosAtivos: number;
   ticketMedioCentavos: Centavos;
   ultimoProjetoTitulo: string | null;
-  percentualConcentracaoPb: number; // 4550 = 45,50%
-  percentualFormatado: string;
-  alertaConcentracao: boolean;
   qtdProjetos: number;
 }
 
 export async function getClientes() {
-  const [todosClientes, todosProjetos, todosRecebimentos, config] = await Promise.all([
+  const [todosClientes, todosProjetos, todosRecebimentos] = await Promise.all([
     db.select().from(clientes).orderBy(asc(clientes.nome)),
     db.select().from(projetos).orderBy(desc(projetos.criadoEm)),
     db.select().from(recebimentos),
-    db.query.configuracoes.findFirst({
-      where: eq(configuracoes.id, ID_CONFIGURACOES_UNICA),
-    }),
   ]);
-
-  const limiteConcentracao = config?.limiteConcentracaoCliente ?? 40; // 40%
 
   // Mapeia projeto -> clienteId e projeto -> status
   const projetoClienteMap = new Map<string, string>();
@@ -65,10 +55,6 @@ export async function getClientes() {
       aReceberPorCliente.set(clienteId, atual + r.valorCentavos);
     }
   }
-
-  // Total de faturamento do estúdio (recebido)
-  const todosRecebidos = todosRecebimentos.filter((r) => r.recebidoEm !== null);
-  const faturamentoTotalEstudio = somar(todosRecebidos.map((r) => r.valorCentavos));
 
   // Metricas de projetos por cliente
   const contagemProjetos = new Map<string, number>();
@@ -99,16 +85,6 @@ export async function getClientes() {
     const ticketMedioCentavos =
       qtdProjetos > 0 ? Math.round(totalRecebido / qtdProjetos) : 0;
 
-    let percentualPb = 0;
-    let percentualFormatado = '0,0%';
-
-    if (faturamentoTotalEstudio > 0 && totalRecebido > 0) {
-      percentualPb = Math.round((totalRecebido * 10000) / faturamentoTotalEstudio);
-      percentualFormatado = `${(percentualPb / 100).toFixed(1).replace('.', ',')}%`;
-    }
-
-    const alertaConcentracao = percentualPb > limiteConcentracao * 100;
-
     return {
       id: c.id,
       nome: c.nome,
@@ -123,9 +99,6 @@ export async function getClientes() {
       projetosAtivos,
       ticketMedioCentavos,
       ultimoProjetoTitulo,
-      percentualConcentracaoPb: percentualPb,
-      percentualFormatado,
-      alertaConcentracao,
       qtdProjetos,
     };
   });
@@ -135,8 +108,6 @@ export async function getClientes() {
 
   return {
     clientes: itens,
-    limiteConcentracao,
-    faturamentoTotalEstudio,
   };
 }
 

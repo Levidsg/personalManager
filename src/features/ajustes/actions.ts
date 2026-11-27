@@ -12,7 +12,6 @@ export interface SalvarConfiguracoesInput {
   salarioBaseCentavos: Centavos;
   moduloContribuicaoAtivo: boolean;
   contribuicaoBase: 'lucro' | 'bruta';
-  limiteConcentracaoCliente: number;
 }
 
 export async function salvarConfiguracoes(dados: SalvarConfiguracoesInput) {
@@ -24,7 +23,6 @@ export async function salvarConfiguracoes(dados: SalvarConfiguracoesInput) {
       salarioBaseCentavos: Math.max(0, dados.salarioBaseCentavos),
       moduloContribuicaoAtivo: dados.moduloContribuicaoAtivo,
       contribuicaoBase: dados.contribuicaoBase,
-      limiteConcentracaoCliente: Math.min(100, Math.max(10, dados.limiteConcentracaoCliente)),
     })
     .where(eq(configuracoes.id, ID_CONFIGURACOES_UNICA));
 

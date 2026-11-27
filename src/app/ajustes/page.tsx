@@ -20,7 +20,6 @@ export default async function AjustesPage() {
           salarioBaseCentavos: config.salarioBaseCentavos,
           moduloContribuicaoAtivo: config.moduloContribuicaoAtivo,
           contribuicaoBase: config.contribuicaoBase,
-          limiteConcentracaoCliente: config.limiteConcentracaoCliente,
         }}
       />
     </div>

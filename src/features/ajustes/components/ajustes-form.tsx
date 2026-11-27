@@ -20,7 +20,6 @@ export interface AjustesFormProps {
     salarioBaseCentavos: Centavos;
     moduloContribuicaoAtivo: boolean;
     contribuicaoBase: 'lucro' | 'bruta';
-    limiteConcentracaoCliente: number;
   };
 }
 
@@ -34,7 +33,6 @@ export function AjustesForm({ initialConfig }: AjustesFormProps) {
   const [salarioBase, setSalarioBase] = useState<Centavos>(initialConfig.salarioBaseCentavos);
   const [moduloContribuicao, setModuloContribuicao] = useState(initialConfig.moduloContribuicaoAtivo);
   const [contribuicaoBase, setContribuicaoBase] = useState<'lucro' | 'bruta'>(initialConfig.contribuicaoBase);
-  const [limiteConcentracao, setLimiteConcentracao] = useState(initialConfig.limiteConcentracaoCliente);
 
   const handleSalvar = () => {
     startTransition(async () => {
@@ -45,7 +43,6 @@ export function AjustesForm({ initialConfig }: AjustesFormProps) {
           salarioBaseCentavos: salarioBase,
           moduloContribuicaoAtivo: moduloContribuicao,
           contribuicaoBase,
-          limiteConcentracaoCliente: limiteConcentracao,
         });
         toast.sucesso('Configurações salvas com sucesso!');
       } catch {
@@ -149,36 +146,6 @@ export function AjustesForm({ initialConfig }: AjustesFormProps) {
             />
           </div>
         )}
-      </InsetGroup>
-
-      {/* Freela Studio Parâmetros */}
-      <InsetGroup
-        titulo="Freelancer Studio"
-        rodape="Alertas quando o faturamento vindo de um único cliente ultrapassar este limite percentual."
-      >
-        <div className="p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-subhead font-medium text-label block">
-                Limite de Concentração de Cliente
-              </span>
-              <span className="text-caption2 text-secondary block">
-                Padrão recomendado: 40%
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min={10}
-                max={100}
-                value={limiteConcentracao}
-                onChange={(e) => setLimiteConcentracao(Number(e.target.value))}
-                className="w-20 rounded-xl bg-card border border-border px-3 py-1.5 text-center font-bold text-label focus:outline-none focus:ring-1 focus:ring-accent tabular-nums"
-              />
-              <span className="text-subhead font-bold text-label">%</span>
-            </div>
-          </div>
-        </div>
       </InsetGroup>
 
       {/* Privacidade e segurança */}
